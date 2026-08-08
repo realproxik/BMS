@@ -1,0 +1,765 @@
+BMS/                                    # Root directory
+│
+├── ENGINE/                             # 1
+│   ├── CORE/                           # 2
+│   │   ├── DOM/                        # 3
+│   │   │   ├── NODE/                   # 4
+│   │   │   │   ├── DOCUMENT/           # 5
+│   │   │   │   │   ├── bms_document.cc
+│   │   │   │   │   ├── bms_document.h
+│   │   │   │   │   ├── document_fragment.cc
+│   │   │   │   │   ├── document_type.cc
+│   │   │   │   │   ├── xml_document.cc
+│   │   │   │   │   ├── html_document.cc
+│   │   │   │   │   ├── svg_document.cc
+│   │   │   │   │   ├── document_loader.cc
+│   │   │   │   │   ├── document_parser.cc
+│   │   │   │   │   └── document_ready.cc
+│   │   │   │   ├── ELEMENT/           # 6
+│   │   │   │   │   ├── bms_element.cc
+│   │   │   │   │   ├── bms_element.h
+│   │   │   │   │   ├── html_element.cc
+│   │   │   │   │   ├── svg_element.cc
+│   │   │   │   │   ├── mathml_element.cc
+│   │   │   │   │   ├── custom_element.cc
+│   │   │   │   │   ├── shadow_root.cc
+│   │   │   │   │   ├── element_attributes.cc
+│   │   │   │   │   ├── element_style.cc
+│   │   │   │   │   ├── element_events.cc
+│   │   │   │   │   └── element_observer.cc
+│   │   │   │   ├── TEXT/              # 7
+│   │   │   │   │   ├── bms_text.cc
+│   │   │   │   │   ├── bms_text.h
+│   │   │   │   │   ├── cdata_section.cc
+│   │   │   │   │   ├── whitespace_handler.cc
+│   │   │   │   │   └── text_splitter.cc
+│   │   │   │   ├── COMMENT/           # 8
+│   │   │   │   │   ├── bms_comment.cc
+│   │   │   │   │   └── bms_comment.h
+│   │   │   │   └── PROCESSING/        # 9
+│   │   │   │       ├── processing_instruction.cc
+│   │   │   │       └── xml_declaration.cc
+│   │   │   ├── COLLECTIONS/           # 10
+│   │   │   │   ├── bms_node_list.cc
+│   │   │   │   ├── live_node_list.cc
+│   │   │   │   ├── static_node_list.cc
+│   │   │   │   ├── radio_node_list.cc
+│   │   │   │   ├── named_node_map.cc
+│   │   │   │   └── attribute_map.cc
+│   │   │   ├── ITERATORS/             # 11
+│   │   │   │   ├── bms_node_iterator.cc
+│   │   │   │   ├── tree_walker.cc
+│   │   │   │   ├── depth_first_iterator.cc
+│   │   │   │   └── breadth_first_iterator.cc
+│   │   │   ├── MUTATION/              # 12
+│   │   │   │   ├── bms_mutation_observer.cc
+│   │   │   │   ├── mutation_record.cc
+│   │   │   │   └── mutation_callback.cc
+│   │   │   └── EVENTS/                # 13
+│   │   │       ├── bms_event.cc
+│   │   │       ├── bms_event.h
+│   │   │       ├── event_target.cc
+│   │   │       ├── event_listener.cc
+│   │   │       ├── event_dispatcher.cc
+│   │   │       └── custom_event.cc
+│   │   ├── PARSER/                    # 14
+│   │   │   ├── HTML/                  # 15
+│   │   │   │   ├── TOKENIZER/         # 16
+│   │   │   │   │   ├── bms_html_tokenizer.cc
+│   │   │   │   │   ├── bms_html_tokenizer.h
+│   │   │   │   │   ├── token.cc
+│   │   │   │   │   ├── character_reader.cc
+│   │   │   │   │   ├── doctype_scanner.cc
+│   │   │   │   │   ├── tag_scanner.cc
+│   │   │   │   │   ├── attribute_scanner.cc
+│   │   │   │   │   └── comment_scanner.cc
+│   │   │   │   ├── TREE_BUILDER/      # 17
+│   │   │   │   │   ├── bms_tree_builder.cc
+│   │   │   │   │   ├── bms_tree_builder.h
+│   │   │   │   │   ├── insertion_modes.cc
+│   │   │   │   │   ├── open_elements_stack.cc
+│   │   │   │   │   ├── active_formatting_elements.cc
+│   │   │   │   │   └── frameset_ok_flag.cc
+│   │   │   │   └── SCRIPT_RUNNER/     # 18
+│   │   │   │       ├── bms_script_runner.cc
+│   │   │   │       ├── script_loader.cc
+│   │   │   │       └── deferred_script_manager.cc
+│   │   │   ├── CSS/                   # 19
+│   │   │   │   ├── PARSER/            # 20
+│   │   │   │   │   ├── bms_css_parser.cc
+│   │   │   │   │   ├── bms_css_parser.h
+│   │   │   │   │   ├── stylesheet_parser.cc
+│   │   │   │   │   ├── property_parser.cc
+│   │   │   │   │   ├── value_parser.cc
+│   │   │   │   │   └── at_rule_parser.cc
+│   │   │   │   ├── SELECTOR/          # 21
+│   │   │   │   │   ├── bms_selector.cc
+│   │   │   │   │   ├── bms_selector.h
+│   │   │   │   │   ├── selector_matcher.cc
+│   │   │   │   │   ├── pseudo_class.cc
+│   │   │   │   │   ├── pseudo_element.cc
+│   │   │   │   │   ├── attribute_selector.cc
+│   │   │   │   │   ├── class_selector.cc
+│   │   │   │   │   └── id_selector.cc
+│   │   │   │   └── MEDIA/             # 22
+│   │   │   │       ├── bms_media_query.cc
+│   │   │   │       ├── media_query_parser.cc
+│   │   │   │       └── media_features.cc
+│   │   │   ├── XML/                   # 23
+│   │   │   │   ├── bms_xml_parser.cc
+│   │   │   │   ├── xml_tokenizer.cc
+│   │   │   │   ├── xml_tree_builder.cc
+│   │   │   │   └── namespace_handler.cc
+│   │   │   └── SVG/                   # 24
+│   │   │       ├── bms_svg_parser.cc
+│   │   │       ├── svg_tokenizer.cc
+│   │   │       └── svg_tree_builder.cc
+│   │   ├── STYLE/                     # 25
+│   │   │   ├── COMPUTED/              # 26
+│   │   │   │   ├── bms_computed_style.cc
+│   │   │   │   ├── bms_computed_style.h
+│   │   │   │   ├── style_resolver.cc
+│   │   │   │   └── style_invalidator.cc
+│   │   │   ├── SHEETS/                # 27
+│   │   │   │   ├── bms_style_sheet.cc
+│   │   │   │   ├── bms_style_sheet.h
+│   │   │   │   ├── css_style_sheet.cc
+│   │   │   │   ├── style_sheet_list.cc
+│   │   │   │   └── css_rule.cc
+│   │   │   ├── CASCADE/               # 28
+│   │   │   │   ├── bms_cascade.cc
+│   │   │   │   ├── cascade_resolver.cc
+│   │   │   │   └── specificity_calculator.cc
+│   │   │   ├── INHERITANCE/           # 29
+│   │   │   │   ├── bms_inheritance.cc
+│   │   │   │   └── inheritance_resolver.cc
+│   │   │   └── ANIMATION/             # 30
+│   │   │       ├── KEYFRAMES/         # 31
+│   │   │       │   ├── bms_keyframes.cc
+│   │   │       │   └── keyframe_effect.cc
+│   │   │       ├── TRANSITIONS/       # 32
+│   │   │       │   ├── bms_transition.cc
+│   │   │       │   └── css_transition.cc
+│   │   │       └── WEB_ANIMATIONS/    # 33
+│   │   │           ├── bms_web_animation.cc
+│   │   │           ├── animation_engine.cc
+│   │   │           └── animation_player.cc
+│   │   ├── LAYOUT/                    # 34
+│   │   │   ├── TREE/                  # 35
+│   │   │   │   ├── bms_layout_object.cc
+│   │   │   │   ├── bms_layout_object.h
+│   │   │   │   ├── layout_block.cc
+│   │   │   │   ├── layout_inline.cc
+│   │   │   │   ├── layout_flex.cc
+│   │   │   │   ├── layout_grid.cc
+│   │   │   │   └── layout_table.cc
+│   │   │   ├── BOX_MODEL/             # 36
+│   │   │   │   ├── bms_box_model.cc
+│   │   │   │   ├── margin.cc
+│   │   │   │   ├── padding.cc
+│   │   │   │   ├── border.cc
+│   │   │   │   └── content_box.cc
+│   │   │   ├── FORMATTING/            # 37
+│   │   │   │   ├── BLOCK/             # 38
+│   │   │   │   │   ├── bms_block_formatting.cc
+│   │   │   │   │   └── block_formatting_context.cc
+│   │   │   │   ├── INLINE/            # 39
+│   │   │   │   │   ├── bms_inline_formatting.cc
+│   │   │   │   │   └── inline_formatting_context.cc
+│   │   │   │   ├── FLEX/              # 40
+│   │   │   │   │   ├── bms_flex_formatting.cc
+│   │   │   │   │   └── flex_formatting_context.cc
+│   │   │   │   ├── GRID/              # 41
+│   │   │   │   │   ├── bms_grid_formatting.cc
+│   │   │   │   │   └── grid_formatting_context.cc
+│   │   │   │   └── TABLE/             # 42
+│   │   │   │       ├── bms_table_formatting.cc
+│   │   │   │       └── table_formatting_context.cc
+│   │   │   ├── LINE_BREAKER/          # 43
+│   │   │   │   ├── bms_line_breaker.cc
+│   │   │   │   ├── line_breaking_algorithm.cc
+│   │   │   │   └── hyphenator.cc
+│   │   │   └── REFLOW/                # 44
+│   │   │       ├── bms_reflow_engine.cc
+│   │   │       ├── reflow_state.cc
+│   │   │       ├── incremental_reflow.cc
+│   │   │       └── constraint_layout.cc
+│   │   ├── PAINT/                     # 45
+│   │   │   ├── LAYERS/                # 46
+│   │   │   │   ├── bms_paint_layer.cc
+│   │   │   │   ├── paint_background.cc
+│   │   │   │   ├── paint_foreground.cc
+│   │   │   │   ├── paint_borders.cc
+│   │   │   │   ├── paint_outlines.cc
+│   │   │   │   └── paint_shadows.cc
+│   │   │   ├── RECORDING/             # 47
+│   │   │   │   ├── bms_paint_recorder.cc
+│   │   │   │   ├── display_item.cc
+│   │   │   │   └── display_list.cc
+│   │   │   ├── RASTER/                # 48
+│   │   │   │   ├── bms_rasterizer.cc
+│   │   │   │   ├── software_rasterizer.cc
+│   │   │   │   ├── gpu_rasterizer.cc
+│   │   │   │   └── tile_rasterizer.cc
+│   │   │   └── COMPOSITING/           # 49
+│   │   │       ├── bms_compositor.cc
+│   │   │       ├── layer_tree.cc
+│   │   │       ├── graphics_layer.cc
+│   │   │       ├── scrollable_layer.cc
+│   │   │       └── transform_layer.cc
+│   │   └── JAVASCRIPT/                # 50
+│   │       ├── V8/                    # 51
+│   │       │   ├── COMPILER/          # 52
+│   │       │   │   ├── TURBOFAN/      # 53
+│   │       │   │   │   ├── bms_turbofan.cc
+│   │       │   │   │   ├── graph_builder.cc
+│   │       │   │   │   ├── graph_reducer.cc
+│   │       │   │   │   ├── instruction_selector.cc
+│   │       │   │   │   └── code_generator.cc
+│   │       │   │   ├── CRANKSHAFT/    # 54
+│   │       │   │   │   ├── bms_crankshaft.cc
+│   │       │   │   │   ├── hydrogen.cc
+│   │       │   │   │   └── lithium.cc
+│   │       │   │   └── INTERPRETER/   # 55
+│   │       │   │       ├── bms_interpreter.cc
+│   │       │   │       ├── bytecode_generator.cc
+│   │       │   │       └── ignition.cc
+│   │       │   ├── RUNTIME/           # 56
+│   │       │   │   ├── bms_runtime.cc
+│   │       │   │   ├── runtime_object.cc
+│   │       │   │   ├── runtime_string.cc
+│   │       │   │   ├── runtime_array.cc
+│   │       │   │   ├── runtime_function.cc
+│   │       │   │   └── runtime_promise.cc
+│   │       │   ├── GC/                # 57
+│   │       │   │   ├── YOUNG/         # 58
+│   │       │   │   │   ├── bms_young_gen.cc
+│   │       │   │   │   ├── semispace.cc
+│   │       │   │   │   └── scavenger.cc
+│   │       │   │   ├── OLD/           # 59
+│   │       │   │   │   ├── bms_old_gen.cc
+│   │       │   │   │   ├── mark_sweep.cc
+│   │       │   │   │   └── compaction.cc
+│   │       │   │   └── INCREMENTAL/   # 60
+│   │       │   │       ├── bms_incremental_gc.cc
+│   │       │   │       └── heap.cc
+│   │       │   ├── OBJECTS/           # 61
+│   │       │   │   ├── bms_objects.cc
+│   │       │   │   ├── bms_objects.h
+│   │       │   │   ├── js_object.cc
+│   │       │   │   ├── js_array.cc
+│   │       │   │   ├── js_function.cc
+│   │       │   │   ├── js_string.cc
+│   │       │   │   ├── js_number.cc
+│   │       │   │   └── js_promise.cc
+│   │       │   └── EXECUTION/         # 62
+│   │       │       ├── bms_execution.cc
+│   │       │       ├── stack.cc
+│   │       │       ├── frame.cc
+│   │       │       ├── context.cc
+│   │       │       └── microtask.cc
+│   │       ├── SPIDERMONKEY/          # 63
+│   │       │   ├── FRONTEND/          # 64
+│   │       │   │   ├── bms_spider_parser.cc
+│   │       │   │   ├── tokenizer.cc
+│   │       │   │   └── ast_builder.cc
+│   │       │   ├── VM/                # 65
+│   │       │   │   ├── bms_spider_runtime.cc
+│   │       │   │   ├── object.cc
+│   │       │   │   └── function.cc
+│   │       │   └── GC/                # 66
+│   │       │       ├── bms_spider_gc.cc
+│   │       │       └── generational_gc.cc
+│   │       └── WASM/                  # 67
+│   │           ├── bms_wasm_module.cc
+│   │           ├── bms_wasm_instance.cc
+│   │           ├── wasm_memory.cc
+│   │           ├── wasm_table.cc
+│   │           ├── wasm_compiler.cc
+│   │           └── wasm_interpreter.cc
+│   └── API/                           # 68
+│       ├── BINDINGS/                  # 69
+│       │   ├── bms_bindings.cc
+│       │   ├── html_bindings.cc
+│       │   ├── css_bindings.cc
+│       │   ├── dom_bindings.cc
+│       │   └── webidl_compiler.cc
+│       ├── INTERFACES/                # 70
+│       │   ├── bms_interfaces.cc
+│       │   ├── window_interface.cc
+│       │   ├── document_interface.cc
+│       │   └── navigation_interface.cc
+│       └── EXTENSIONS/                # 71
+│           ├── bms_extensions.cc
+│           └── native_messaging.cc
+│
+├── RENDERER/                          # 72
+│   ├── PROCESS/                       # 73
+│   │   ├── bms_render_process.cc
+│   │   ├── main_thread.cc
+│   │   ├── compositor_thread.cc
+│   │   ├── raster_thread.cc
+│   │   └── thread_pool.cc
+│   ├── FRAME/                         # 74
+│   │   ├── bms_frame.cc
+│   │   ├── bms_frame.h
+│   │   ├── local_frame.cc
+│   │   ├── remote_frame.cc
+│   │   └── frame_tree.cc
+│   ├── VIEW/                          # 75
+│   │   ├── bms_render_view.cc
+│   │   ├── web_view.cc
+│   │   └── view_delegate.cc
+│   └── WIDGET/                        # 76
+│       ├── bms_render_widget.cc
+│       ├── compositing_widget.cc
+│       ├── input_handler.cc
+│       └── gesture_recognizer.cc
+│
+├── NETWORK/                           # 77
+│   ├── HTTP/                          # 78
+│   │   ├── HTTP1/                     # 79
+│   │   │   ├── bms_http1.cc
+│   │   │   ├── connection.cc
+│   │   │   ├── request.cc
+│   │   │   ├── response.cc
+│   │   │   ├── headers.cc
+│   │   │   └── keep_alive.cc
+│   │   ├── HTTP2/                     # 80
+│   │   │   ├── bms_http2.cc
+│   │   │   ├── h2_session.cc
+│   │   │   ├── h2_stream.cc
+│   │   │   ├── hpack_encoder.cc
+│   │   │   ├── hpack_decoder.cc
+│   │   │   └── server_push.cc
+│   │   └── HTTP3/                     # 81
+│   │       ├── bms_http3.cc
+│   │       ├── quic_session.cc
+│   │       ├── quic_stream.cc
+│   │       ├── quic_connection.cc
+│   │       ├── quic_crypto.cc
+│   │       └── 0_rtt.cc
+│   ├── DNS/                           # 82
+│   │   ├── bms_dns.cc
+│   │   ├── resolver.cc
+│   │   ├── cache.cc
+│   │   ├── prefetch.cc
+│   │   └── dns_over_https.cc
+│   ├── TLS/                           # 83
+│   │   ├── bms_tls.cc
+│   │   ├── handshake.cc
+│   │   ├── certificate.cc
+│   │   ├── certificate_verifier.cc
+│   │   ├── cipher_suite.cc
+│   │   └── alpn.cc
+│   ├── CACHE/                         # 84
+│   │   ├── bms_cache.cc
+│   │   ├── memory_cache.cc
+│   │   ├── disk_cache.cc
+│   │   ├── service_worker_cache.cc
+│   │   └── cache_control.cc
+│   └── SOCKET/                        # 85
+│       ├── bms_socket.cc
+│       ├── tcp_socket.cc
+│       ├── udp_socket.cc
+│       ├── websocket.cc
+│       └── socket_pool.cc
+│
+├── STORAGE/                           # 86
+│   ├── LOCAL/                         # 87
+│   │   ├── bms_local_storage.cc
+│   │   ├── storage_area.cc
+│   │   └── quota_manager.cc
+│   ├── SESSION/                       # 88
+│   │   ├── bms_session_storage.cc
+│   │   └── tab_storage.cc
+│   ├── INDEXEDDB/                     # 89
+│   │   ├── DATABASE/                  # 90
+│   │   │   ├── bms_indexed_db.cc
+│   │   │   ├── database.cc
+│   │   │   └── connection_pool.cc
+│   │   ├── TRANSACTION/               # 91
+│   │   │   ├── bms_transaction.cc
+│   │   │   ├── object_store.cc
+│   │   │   ├── index.cc
+│   │   │   └── cursor.cc
+│   │   └── BLOB/                      # 92
+│   │       ├── bms_blob.cc
+│   │       ├── blob_storage.cc
+│   │       └── file_handle.cc
+│   ├── COOKIES/                       # 93
+│   │   ├── bms_cookie.cc
+│   │   ├── cookie_jar.cc
+│   │   ├── cookie_store.cc
+│   │   ├── http_only.cc
+│   │   ├── secure_flag.cc
+│   │   ├── same_site.cc
+│   │   └── session_cookie.cc
+│   ├── FILESYSTEM/                    # 94
+│   │   ├── bms_file_system.cc
+│   │   ├── sandboxed_fs.cc
+│   │   ├── file_writer.cc
+│   │   ├── file_reader.cc
+│   │   └── origin_private_fs.cc
+│   └── CACHE_STORAGE/                 # 95
+│       ├── bms_cache_storage.cc
+│       ├── cache_api.cc
+│       └── cache_keys.cc
+│
+├── SECURITY/                          # 96
+│   ├── SOP/                           # 97
+│   │   ├── bms_sop.cc
+│   │   ├── same_origin_policy.cc
+│   │   └── origin.cc
+│   ├── CORS/                          # 98
+│   │   ├── bms_cors.cc
+│   │   ├── preflight.cc
+│   │   ├── simple_request.cc
+│   │   └── credentialed_request.cc
+│   ├── CSP/                           # 99
+│   │   ├── bms_csp.cc
+│   │   ├── content_security_policy.cc
+│   │   ├── script_src.cc
+│   │   ├── style_src.cc
+│   │   ├── img_src.cc
+│   │   └── report_only.cc
+│   ├── SRI/                           # 100
+│   │   ├── bms_sri.cc
+│   │   └── subresource_integrity.cc
+│   ├── SANDBOX/                       # 101
+│   │   ├── bms_sandbox.cc
+│   │   ├── process_sandbox.cc
+│   │   ├── seccomp.cc
+│   │   └── namespace_sandbox.cc
+│   └── PERMISSIONS/                   # 102
+│       ├── bms_permissions.cc
+│       ├── permission_manager.cc
+│       ├── geolocation_permission.cc
+│       ├── camera_permission.cc
+│       ├── microphone_permission.cc
+│       ├── notification_permission.cc
+│       └── clipboard_permission.cc
+│
+├── GPU/                               # 103
+│   ├── PROCESS/                       # 104
+│   │   ├── bms_gpu_process.cc
+│   │   ├── gpu_thread.cc
+│   │   └── gpu_main.cc
+│   ├── COMMAND_BUFFER/                # 105
+│   │   ├── bms_command_buffer.cc
+│   │   ├── command_parser.cc
+│   │   ├── command_executor.cc
+│   │   └── transfer_buffer.cc
+│   ├── CONTEXT/                       # 106
+│   │   ├── bms_gpu_context.cc
+│   │   ├── webgl_context.cc
+│   │   ├── webgl2_context.cc
+│   │   └── canvas_context.cc
+│   ├── SHADER/                        # 107
+│   │   ├── bms_shader.cc
+│   │   ├── vertex_shader.cc
+│   │   ├── fragment_shader.cc
+│   │   ├── geometry_shader.cc
+│   │   ├── compute_shader.cc
+│   │   └── shader_compiler.cc
+│   ├── TEXTURE/                       # 108
+│   │   ├── bms_texture.cc
+│   │   ├── texture_2d.cc
+│   │   ├── texture_3d.cc
+│   │   ├── texture_cube_map.cc
+│   │   └── texture_compression.cc
+│   ├── BUFFER/                        # 109
+│   │   ├── bms_buffer.cc
+│   │   ├── vertex_buffer.cc
+│   │   ├── index_buffer.cc
+│   │   └── uniform_buffer.cc
+│   ├── RENDER_PASS/                   # 110
+│   │   ├── bms_render_pass.cc
+│   │   ├── render_target.cc
+│   │   ├── framebuffer.cc
+│   │   └── renderbuffer.cc
+│   └── DISPLAY/                       # 111
+│       ├── bms_display.cc
+│       ├── screen.cc
+│       ├── monitor.cc
+│       ├── refresh_rate.cc
+│       └── vsync.cc
+│
+├── MEDIA/                             # 112
+│   ├── AUDIO/                         # 113
+│   │   ├── CONTEXT/                   # 114
+│   │   │   ├── bms_audio_context.cc
+│   │   │   ├── audio_worklet.cc
+│   │   │   └── audio_buffer.cc
+│   │   ├── NODES/                     # 115
+│   │   │   ├── bms_audio_node.cc
+│   │   │   ├── oscillator.cc
+│   │   │   ├── gain_node.cc
+│   │   │   ├── delay_node.cc
+│   │   │   ├── filter_node.cc
+│   │   │   ├── panner_node.cc
+│   │   │   └── analyser_node.cc
+│   │   └── CODEC/                     # 116
+│   │       ├── bms_audio_codec.cc
+│   │       ├── opus_codec.cc
+│   │       ├── vorbis_codec.cc
+│   │       └── aac_codec.cc
+│   ├── VIDEO/                         # 117
+│   │   ├── DECODER/                   # 118
+│   │   │   ├── bms_video_decoder.cc
+│   │   │   ├── h264_decoder.cc
+│   │   │   ├── h265_decoder.cc
+│   │   │   ├── vp9_decoder.cc
+│   │   │   └── av1_decoder.cc
+│   │   ├── ENCODER/                   # 119
+│   │   │   ├── bms_video_encoder.cc
+│   │   │   └── h264_encoder.cc
+│   │   └── STREAM/                    # 120
+│   │       ├── bms_media_stream.cc
+│   │       ├── media_source.cc
+│   │       └── source_buffer.cc
+│   └── CAPTURE/                       # 121
+│       ├── bms_capture.cc
+│       ├── camera_capture.cc
+│       ├── microphone_capture.cc
+│       ├── screen_capture.cc
+│       ├── tab_capture.cc
+│       └── get_user_media.cc
+│
+├── UI/                                # 122
+│   ├── WINDOW/                        # 123
+│   │   ├── bms_window.cc
+│   │   ├── main_window.cc
+│   │   ├── popup_window.cc
+│   │   ├── dialog_window.cc
+│   │   └── fullscreen_window.cc
+│   ├── TAB/                           # 124
+│   │   ├── bms_tab.cc
+│   │   ├── tab_manager.cc
+│   │   ├── tab_group.cc
+│   │   └── tab_switcher.cc
+│   ├── TOOLBAR/                       # 125
+│   │   ├── bms_toolbar.cc
+│   │   ├── address_bar.cc
+│   │   ├── back_button.cc
+│   │   ├── forward_button.cc
+│   │   ├── refresh_button.cc
+│   │   ├── home_button.cc
+│   │   ├── bookmark_button.cc
+│   │   └── menu_button.cc
+│   ├── BOOKMARKS/                     # 126
+│   │   ├── bms_bookmarks.cc
+│   │   ├── bookmark_manager.cc
+│   │   ├── bookmark_bar.cc
+│   │   ├── bookmark_folder.cc
+│   │   └── bookmark_item.cc
+│   ├── HISTORY/                       # 127
+│   │   ├── bms_history.cc
+│   │   ├── history_manager.cc
+│   │   ├── history_entry.cc
+│   │   ├── history_database.cc
+│   │   └── clear_browsing_data.cc
+│   └── SETTINGS/                      # 128
+│       ├── bms_settings.cc
+│       ├── settings_manager.cc
+│       ├── preferences.cc
+│       ├── appearance_settings.cc
+│       ├── privacy_settings.cc
+│       ├── search_engine.cc
+│       ├── downloads_settings.cc
+│       └── advanced_settings.cc
+│
+├── PLATFORM/                          # 129
+│   ├── WINDOWS/                       # 130
+│   │   ├── bms_win_platform.cc
+│   │   ├── win_window.cc
+│   │   ├── win_graphics.cc
+│   │   ├── win_network.cc
+│   │   ├── win_file.cc
+│   │   ├── win_registry.cc
+│   │   ├── win_audio.cc
+│   │   └── win_system.cc
+│   ├── MACOS/                         # 131
+│   │   ├── bms_mac_platform.cc
+│   │   ├── mac_window.cc
+│   │   ├── mac_graphics.cc
+│   │   ├── mac_network.cc
+│   │   ├── mac_file.cc
+│   │   ├── mac_audio.cc
+│   │   └── mac_system.cc
+│   ├── LINUX/                         # 132
+│   │   ├── X11/                       # 133
+│   │   │   ├── bms_x11_window.cc
+│   │   │   └── x11_platform.cc
+│   │   └── WAYLAND/                   # 134
+│   │       ├── bms_wayland_window.cc
+│   │       └── wayland_platform.cc
+│   └── ANDROID/                       # 135
+│       ├── bms_android_platform.cc
+│       ├── android_window.cc
+│       ├── android_graphics.cc
+│       ├── android_network.cc
+│       ├── android_file.cc
+│       ├── android_audio.cc
+│       └── android_system.cc
+│
+├── UTILITIES/                         # 136
+│   ├── BASE/                          # 137
+│   │   ├── bms_utils.cc
+│   │   ├── string_utils.cc
+│   │   ├── utf8_utils.cc
+│   │   ├── unicode_utils.cc
+│   │   ├── base64_utils.cc
+│   │   ├── hash_utils.cc
+│   │   ├── crypto_utils.cc
+│   │   ├── random_utils.cc
+│   │   ├── time_utils.cc
+│   │   ├── log_utils.cc
+│   │   └── debug_utils.cc
+│   ├── MEMORY/                        # 138
+│   │   ├── ALLOCATOR/                 # 139
+│   │   │   ├── bms_allocator.cc
+│   │   │   ├── pool_allocator.cc
+│   │   │   ├── slab_allocator.cc
+│   │   │   └── stack_allocator.cc
+│   │   └── POOL/                      # 140
+│   │       ├── bms_memory_pool.cc
+│   │       ├── buffer_pool.cc
+│   │       └── memory_manager.cc
+│   ├── THREAD/                        # 141
+│   │   ├── bms_thread.cc
+│   │   ├── thread_pool.cc
+│   │   ├── task_runner.cc
+│   │   ├── message_loop.cc
+│   │   ├── event_loop.cc
+│   │   ├── mutex.cc
+│   │   └── condition_variable.cc
+│   ├── IPC/                           # 142
+│   │   ├── bms_ipc.cc
+│   │   ├── message.cc
+│   │   ├── channel.cc
+│   │   ├── pipe.cc
+│   │   ├── socket.cc
+│   │   └── shared_memory.cc
+│   └── CONTAINER/                     # 143
+│       ├── bms_container.cc
+│       ├── vector.cc
+│       ├── list.cc
+│       ├── map.cc
+│       ├── set.cc
+│       ├── queue.cc
+│       └── hash_map.cc
+│
+├── EXTENSIONS/                        # 144
+│   ├── API/                           # 145
+│   │   ├── bms_extensions_api.cc
+│   │   ├── web_request_api.cc
+│   │   ├── storage_api.cc
+│   │   ├── tabs_api.cc
+│   │   ├── windows_api.cc
+│   │   ├── bookmarks_api.cc
+│   │   ├── history_api.cc
+│   │   ├── downloads_api.cc
+│   │   └── notifications_api.cc
+│   ├── MANAGER/                       # 146
+│   │   ├── bms_extension_manager.cc
+│   │   ├── extension_loader.cc
+│   │   ├── extension_installer.cc
+│   │   ├── extension_uninstaller.cc
+│   │   ├── extension_updater.cc
+│   │   ├── manifest_parser.cc
+│   │   └── permissions_manager.cc
+│   ├── CONTENT/                       # 147
+│   │   ├── bms_content_script.cc
+│   │   ├── content_script_injector.cc
+│   │   ├── background_page.cc
+│   │   ├── popup_page.cc
+│   │   └── options_page.cc
+│   └── STORE/                         # 148
+│       ├── bms_extension_store.cc
+│       ├── theme_store.cc
+│       └── app_store.cc
+│
+├── DEVTOOLS/                          # 149
+│   ├── INSPECTOR/                     # 150
+│   │   ├── bms_inspector.cc
+│   │   ├── dom_inspector.cc
+│   │   ├── css_inspector.cc
+│   │   ├── console_inspector.cc
+│   │   ├── network_inspector.cc
+│   │   ├── performance_inspector.cc
+│   │   ├── memory_inspector.cc
+│   │   └── security_inspector.cc
+│   ├── DEBUGGER/                      # 151
+│   │   ├── bms_debugger.cc
+│   │   ├── breakpoint.cc
+│   │   ├── call_stack_viewer.cc
+│   │   ├── variable_viewer.cc
+│   │   └── watch_expression.cc
+│   ├── PROFILER/                      # 152
+│   │   ├── bms_profiler.cc
+│   │   ├── cpu_profiler.cc
+│   │   ├── heap_profiler.cc
+│   │   ├── timeline_profiler.cc
+│   │   └── flame_graph.cc
+│   └── CONSOLE/                       # 153
+│       ├── bms_console.cc
+│       ├── log_output.cc
+│       ├── error_output.cc
+│       ├── warning_output.cc
+│       └── debug_output.cc
+│
+├── BUILD/                             # 154
+│   ├── GN/                            # 155
+│   │   ├── BUILD.gn
+│   │   ├── config.gni
+│   │   └── toolchain.gni
+│   ├── CMAKE/                         # 156
+│   │   ├── CMakeLists.txt
+│   │   ├── config.cmake
+│   │   └── dependencies.cmake
+│   ├── MAKEFILE/                      # 157
+│   │   ├── Makefile
+│   │   ├── Makefile.common
+│   │   └── Makefile.arch
+│   └── DEPENDENCIES/                  # 158
+│       ├── chromium/
+│       ├── webkit/
+│       ├── skia/
+│       ├── angle/
+│       ├── webrtc/
+│       ├── libjpeg/
+│       ├── libpng/
+│       ├── zlib/
+│       ├── libxml/
+│       ├── freetype/
+│       ├── harfbuzz/
+│       ├── icu/
+│       ├── ffmpeg/
+│       └── sqlite/
+│
+└── TESTS/                             # 159
+    ├── UNIT/                          # 160
+    │   ├── bms_dom_tests.cc
+    │   ├── parser_tests.cc
+    │   ├── layout_tests.cc
+    │   ├── paint_tests.cc
+    │   ├── js_tests.cc
+    │   ├── network_tests.cc
+    │   └── storage_tests.cc
+    ├── INTEGRATION/                   # 161
+    │   ├── bms_renderer_tests.cc
+    │   ├── browser_tests.cc
+    │   └── end_to_end_tests.cc
+    ├── PERFORMANCE/                   # 162
+    │   ├── bms_benchmark.cc
+    │   ├── speedometer.cc
+    │   ├── jetstream.cc
+    │   └── octane.cc
+    └── SECURITY/                      # 163
+        ├── FUZZER/                    # 164
+        │   ├── bms_fuzzer.cc
+        │   └── fuzzer_tests.cc
+        └── PENETRATION/               # 165
+            ├── bms_penetration.cc
+            └── vulnerability_tests.cc 

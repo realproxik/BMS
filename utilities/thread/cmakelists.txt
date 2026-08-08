@@ -1,0 +1,61 @@
+# CMakeLists.txt - BMS Thread Build Configuration
+cmake_minimum_required(VERSION 3.10)
+project(BMSThread)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+
+# Thread sources
+set(THREAD_SOURCES
+    thread.c
+    thread.cpp
+    thread_test.c
+)
+
+set(THREAD_HEADERS
+    thread.h
+)
+
+# Platform-specific settings
+if(WIN32)
+    set(THREAD_LIBS
+        ws2_32.lib
+    )
+    set(PLATFORM_DEFINES WIN32)
+elseif(APPLE)
+    set(THREAD_LIBS
+        pthread
+    )
+    set(PLATFORM_DEFINES __APPLE__)
+else()
+    set(THREAD_LIBS
+        pthread
+        rt
+    )
+    set(PLATFORM_DEFINES __linux__)
+endif()
+
+# Create thread library
+add_library(bms_thread ${THREAD_SOURCES} ${THREAD_HEADERS})
+
+target_include_directories(bms_thread PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_compile_definitions(bms_thread PUBLIC
+    ${PLATFORM_DEFINES}
+)
+
+target_link_libraries(bms_thread
+    ${THREAD_LIBS}
+)
+
+# Create test executable
+add_executable(thread_test ${THREAD_TEST_SOURCES})
+target_link_libraries(thread_test bms_thread)
+
+# Install
+install(TARGETS bms_thread
+    LIBRARY DESTINATION lib
+    PUBLIC_HEADER DESTINATION include/bms
+)

@@ -1,0 +1,254 @@
+// toolbar.ii - SWIG Interface for Toolbar (C style)
+%module bms_toolbar_c
+
+%{
+#include "toolbar.h"
+#include "tool.h"
+%}
+
+// C-style toolbar functions
+typedef struct Toolbar Toolbar;
+
+extern Toolbar* toolbar_create(void);
+extern void toolbar_destroy(Toolbar* toolbar);
+extern void toolbar_add_tool(Toolbar* toolbar, Tool* tool);
+extern void toolbar_remove_tool_by_id(Toolbar* toolbar, const char* id);
+extern void toolbar_remove_tool_by_index(Toolbar* toolbar, int index);
+extern void toolbar_clear(Toolbar* toolbar);
+extern int toolbar_get_count(const Toolbar* toolbar);
+extern Tool* toolbar_get_tool(const Toolbar* toolbar, int index);
+extern void toolbar_set_orientation(Toolbar* toolbar, int orientation);
+extern int toolbar_get_orientation(const Toolbar* toolbar);
+extern void toolbar_set_spacing(Toolbar* toolbar, int spacing);
+extern int toolbar_get_spacing(const Toolbar* toolbar);
+extern void toolbar_set_padding(Toolbar* toolbar, int padding);
+extern int toolbar_get_padding(const Toolbar* toolbar);
+extern void toolbar_set_background_color(Toolbar* toolbar, const char* color);
+extern const char* toolbar_get_background_color(const Toolbar* toolbar);
+extern void toolbar_set_border_color(Toolbar* toolbar, const char* color);
+extern const char* toolbar_get_border_color(const Toolbar* toolbar);
+extern void toolbar_set_border_width(Toolbar* toolbar, int width);
+extern int toolbar_get_border_width(const Toolbar* toolbar);
+extern void toolbar_set_corner_radius(Toolbar* toolbar, int radius);
+extern int toolbar_get_corner_radius(const Toolbar* toolbar);
+extern void toolbar_set_auto_hide(Toolbar* toolbar, int autoHide);
+extern int toolbar_get_auto_hide(const Toolbar* toolbar);
+extern void toolbar_set_floating(Toolbar* toolbar, int floating);
+extern int toolbar_get_floating(const Toolbar* toolbar);
+extern void toolbar_set_resizable(Toolbar* toolbar, int resizable);
+extern int toolbar_get_resizable(const Toolbar* toolbar);
+extern void toolbar_set_movable(Toolbar* toolbar, int movable);
+extern int toolbar_get_movable(const Toolbar* toolbar);
+extern void toolbar_show(Toolbar* toolbar);
+extern void toolbar_hide(Toolbar* toolbar);
+extern int toolbar_is_visible(const Toolbar* toolbar);
+extern void toolbar_set_position(Toolbar* toolbar, int x, int y);
+extern void toolbar_get_position(const Toolbar* toolbar, int* x, int* y);
+extern void toolbar_set_size(Toolbar* toolbar, int width, int height);
+extern void toolbar_get_size(const Toolbar* toolbar, int* width, int* height);
+extern void toolbar_render(Toolbar* toolbar, void* context);
+extern void toolbar_update(Toolbar* toolbar);
+
+// Python wrapper
+%pythoncode {
+    class ToolbarWrapper:
+        def __init__(self):
+            self._toolbar = toolbar_create()
+        
+        def __del__(self):
+            if self._toolbar:
+                toolbar_destroy(self._toolbar)
+        
+        def add_tool(self, tool):
+            if isinstance(tool, ToolWrapper):
+                toolbar_add_tool(self._toolbar, tool._tool)
+        
+        def remove_tool(self, id_or_index):
+            if isinstance(id_or_index, int):
+                toolbar_remove_tool_by_index(self._toolbar, id_or_index)
+            else:
+                toolbar_remove_tool_by_id(self._toolbar, id_or_index)
+        
+        def clear(self):
+            toolbar_clear(self._toolbar)
+        
+        @property
+        def count(self):
+            return toolbar_get_count(self._toolbar)
+        
+        def get_tool(self, index):
+            return ToolWrapper(toolbar_get_tool(self._toolbar, index))
+        
+        @property
+        def orientation(self):
+            return toolbar_get_orientation(self._toolbar)
+        
+        @orientation.setter
+        def orientation(self, value):
+            toolbar_set_orientation(self._toolbar, value)
+        
+        @property
+        def spacing(self):
+            return toolbar_get_spacing(self._toolbar)
+        
+        @spacing.setter
+        def spacing(self, value):
+            toolbar_set_spacing(self._toolbar, value)
+        
+        @property
+        def padding(self):
+            return toolbar_get_padding(self._toolbar)
+        
+        @padding.setter
+        def padding(self, value):
+            toolbar_set_padding(self._toolbar, value)
+        
+        @property
+        def background_color(self):
+            return toolbar_get_background_color(self._toolbar)
+        
+        @background_color.setter
+        def background_color(self, value):
+            toolbar_set_background_color(self._toolbar, value)
+        
+        @property
+        def border_color(self):
+            return toolbar_get_border_color(self._toolbar)
+        
+        @border_color.setter
+        def border_color(self, value):
+            toolbar_set_border_color(self._toolbar, value)
+        
+        @property
+        def border_width(self):
+            return toolbar_get_border_width(self._toolbar)
+        
+        @border_width.setter
+        def border_width(self, value):
+            toolbar_set_border_width(self._toolbar, value)
+        
+        @property
+        def corner_radius(self):
+            return toolbar_get_corner_radius(self._toolbar)
+        
+        @corner_radius.setter
+        def corner_radius(self, value):
+            toolbar_set_corner_radius(self._toolbar, value)
+        
+        @property
+        def auto_hide(self):
+            return toolbar_get_auto_hide(self._toolbar)
+        
+        @auto_hide.setter
+        def auto_hide(self, value):
+            toolbar_set_auto_hide(self._toolbar, value)
+        
+        @property
+        def floating(self):
+            return toolbar_get_floating(self._toolbar)
+        
+        @floating.setter
+        def floating(self, value):
+            toolbar_set_floating(self._toolbar, value)
+        
+        @property
+        def resizable(self):
+            return toolbar_get_resizable(self._toolbar)
+        
+        @resizable.setter
+        def resizable(self, value):
+            toolbar_set_resizable(self._toolbar, value)
+        
+        @property
+        def movable(self):
+            return toolbar_get_movable(self._toolbar)
+        
+        @movable.setter
+        def movable(self, value):
+            toolbar_set_movable(self._toolbar, value)
+        
+        def show(self):
+            toolbar_show(self._toolbar)
+        
+        def hide(self):
+            toolbar_hide(self._toolbar)
+        
+        @property
+        def visible(self):
+            return toolbar_is_visible(self._toolbar)
+        
+        @property
+        def x(self):
+            int x, y
+            toolbar_get_position(self._toolbar, &x, &y)
+            return x
+        
+        @x.setter
+        def x(self, value):
+            int y
+            toolbar_get_position(self._toolbar, NULL, &y)
+            toolbar_set_position(self._toolbar, value, y)
+        
+        @property
+        def y(self):
+            int x, y
+            toolbar_get_position(self._toolbar, &x, &y)
+            return y
+        
+        @y.setter
+        def y(self, value):
+            int x
+            toolbar_get_position(self._toolbar, &x, NULL)
+            toolbar_set_position(self._toolbar, x, value)
+        
+        @property
+        def width(self):
+            int width, height
+            toolbar_get_size(self._toolbar, &width, &height)
+            return width
+        
+        @width.setter
+        def width(self, value):
+            int height
+            toolbar_get_size(self._toolbar, NULL, &height)
+            toolbar_set_size(self._toolbar, value, height)
+        
+        @property
+        def height(self):
+            int width, height
+            toolbar_get_size(self._toolbar, &width, &height)
+            return height
+        
+        @height.setter
+        def height(self, value):
+            int width
+            toolbar_get_size(self._toolbar, &width, NULL)
+            toolbar_set_size(self._toolbar, width, value)
+        
+        def render(self, context=None):
+            toolbar_render(self._toolbar, context)
+        
+        def update(self):
+            toolbar_update(self._toolbar)
+        
+        def __repr__(self):
+            return f"<Toolbar count={self.count}>"
+        
+        def __len__(self):
+            return self.count
+        
+        def __getitem__(self, index):
+            if isinstance(index, int):
+                return self.get_tool(index)
+            elif isinstance(index, str):
+                # Find tool by ID
+                for i in range(self.count):
+                    tool = self.get_tool(i)
+                    if tool.id == index:
+                        return tool
+            return None
+        
+        def __iter__(self):
+            for i in range(self.count):
+                yield self.get_tool(i)
+}

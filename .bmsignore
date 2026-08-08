@@ -1,0 +1,13 @@
+# .bmsignore - files and directories to ignore for BMS tooling
+build/
+out/
+bin/
+dev_tools/
+*.o
+*.obj
+*.exe
+*.log
+*.cache
+*.zip
+*.7z
+build/dependencies/chromuim/

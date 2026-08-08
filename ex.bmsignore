@@ -1,0 +1,1014 @@
+# ============================================================================
+# .bmsignore - BMS Browser Ignore File
+# Version: 1.0.0
+# Purpose: Ignore system files, compiled binaries, hardware files, etc.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# ALL PROGRAM FILES
+# ----------------------------------------------------------------------------
+
+# Executable files
+*.exe
+*.EXE
+*.com
+*.COM
+*.dll
+*.DLL
+*.so
+*.SO
+*.dylib
+*.DYLIB
+*.bin
+*.BIN
+*.app
+*.APP
+*.out
+*.OUT
+
+# Script and interpreted files
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pyzw
+*.class
+*.jar
+*.war
+*.ear
+*.ps1
+*.psm1
+*.psd1
+*.sh
+*.bash
+*.zsh
+*.fish
+*.cmd
+*.bat
+*.vbs
+*.js
+*.ts
+*.rb
+*.pl
+*.pm
+*.t
+*.lua
+*.r
+*.swift
+*.go
+*.rs
+
+# Compiled intermediate files
+*.o
+*.obj
+*.lib
+*.a
+*.la
+*.lo
+*.so.*
+*.dll.*
+*.dylib.*
+*.exp
+*.ilk
+*.pch
+*.pdb
+*.idb
+*.ipdb
+*.iobj
+*.ipch
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.temp
+
+# ----------------------------------------------------------------------------
+# SYSTEM FILES
+# ----------------------------------------------------------------------------
+
+# Windows system files
+*.sys
+*.SYS
+*.drv
+*.DRV
+*.vxd
+*.VXD
+*.acm
+*.ACM
+*.ax
+*.AX
+*.cpl
+*.CPL
+*.crt
+*.CRT
+*.dat
+*.DAT
+*.cfg
+*.CFG
+*.ini
+*.INI
+*.inf
+*.INF
+*.msi
+*.MSI
+*.msp
+*.MSP
+*.msm
+*.MSM
+*.mui
+*.MUI
+*.nls
+*.NLS
+*.ocx
+*.OCX
+*.scr
+*.SCR
+*.tsp
+*.TSP
+*.wpc
+*.WPC
+*.wpl
+*.WPL
+*.wsc
+*.WSC
+*.wsf
+*.WSF
+*.wsh
+*.WSH
+
+# Linux system files
+*.ko
+*.ko.*
+*.mod.c
+*.mod.o
+*.modules.order
+*.Module.symvers
+*.mk
+*.Kconfig
+*.config
+*.config.old
+*.dts
+*.dtb
+*.dtbo
+*.img
+*.vmlinux
+*.vmlinuz
+*.initrd
+*.initramfs
+*.uImage
+*.zImage
+*.Image
+
+# macOS system files
+*.plist
+*.kext
+*.kextcache
+*.prefPane
+*.qtz
+*.saver
+*.wdgt
+*.xpc
+*.xcodeproj
+*.xcworkspace
+*.framework
+*.bundle
+*.appex
+*.xctest
+
+# ----------------------------------------------------------------------------
+# COMPILED FILES
+# ----------------------------------------------------------------------------
+
+# C/C++ compiled files
+*.obj
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.def
+*.tds
+*.map
+*.sym
+*.dbg
+*.stabs
+*.coff
+*.elf
+*.pe
+*.macho
+*.dSYM
+
+# Rust compiled files
+*.rlib
+*.rmeta
+*.rustc
+*.wasm
+
+# Go compiled files
+*.a
+*.test
+*.cov
+*.out
+
+# Java compiled files
+*.class
+*.jar
+*.war
+*.ear
+*.jmod
+*.jimage
+*.jsp
+
+# .NET compiled files
+*.dll
+*.exe
+*.pdb
+*.mdb
+*.resources
+*.resources.dll
+*.ni.dll
+*.ni.exe
+
+# WebAssembly
+*.wasm
+*.wast
+*.wat
+
+# ----------------------------------------------------------------------------
+# DRIVER FILES
+# ----------------------------------------------------------------------------
+
+# Windows drivers
+*.sys
+*.drv
+*.vxd
+*.acm
+*.ax
+*.cpl
+*.dll
+*.inf
+*.pdb
+*.cat
+*.cer
+*.pfx
+*.spc
+*.pvk
+*.evt
+*.evtx
+*.etl
+*.man
+*.mof
+*.mfl
+*.xml
+
+# Linux drivers
+*.ko
+*.ko.*
+*.o
+*.mod.c
+*.mod.o
+*.cmd
+*.symvers
+*.order
+*.a
+*.la
+*.lo
+*.so
+*.so.*
+
+# macOS drivers
+*.kext
+*.kextcache
+*.iokit
+*.driver
+*.plugin
+
+# Hardware driver files
+*.inf
+*.sys
+*.cat
+*.cer
+*.pvk
+*.spc
+*.evt
+*.evtx
+
+# ----------------------------------------------------------------------------
+# OPERATING SYSTEM FILES
+# ----------------------------------------------------------------------------
+
+# Windows OS files
+boot.ini
+ntldr
+ntdetect.com
+bootmgr
+bootsect.bak
+hiberfil.sys
+pagefile.sys
+swapfile.sys
+winload.exe
+winresume.exe
+winload.efi
+winresume.efi
+ntoskrnl.exe
+hal.dll
+kernel32.dll
+ntdll.dll
+user32.dll
+gdi32.dll
+kernelbase.dll
+advapi32.dll
+shell32.dll
+ole32.dll
+oleaut32.dll
+comctl32.dll
+comdlg32.dll
+winspool.drv
+setupapi.dll
+cfgmgmt32.dll
+devmgr.dll
+newdev.dll
+msvcrt.dll
+msvcr*.dll
+msvcp*.dll
+vcruntime*.dll
+ucrtbase.dll
+api-ms-win-*.dll
+ext-ms-win-*.dll
+
+# Linux OS files
+vmlinuz
+vmlinux
+zImage
+uImage
+Image
+initrd.img
+initramfs
+initrd
+System.map
+.config
+.config.old
+kernel
+linux
+/boot/*
+/lib/modules/*
+/lib/firmware/*
+/etc/*
+/var/*
+/proc/*
+/sys/*
+/dev/*
+/run/*
+
+# macOS OS files
+kernel
+mach_kernel
+System.map
+vmlinuz
+initrd
+com.apple.boot.plist
+PlatformSupport.plist
+SystemVersion.plist
+kernelcache
+*.kernelcache
+*.kextcache
+
+# ----------------------------------------------------------------------------
+# HARDWARE FILES
+# ----------------------------------------------------------------------------
+
+# Firmware files
+*.bin
+*.rom
+*.firmware
+*.fw
+*.fwupd
+*.bin2
+*.hex
+*.eeprom
+*.flash
+*.nvm
+*.hcd
+*.dat
+
+# Hardware description files
+*.dts
+*.dtb
+*.dtbo
+*.hwp
+*.hwd
+*.hwl
+*.hwdb
+*.hwcfg
+*.conf
+*.config
+*.cfg
+
+# Hardware abstraction layer
+*.hal
+*.hpi
+*.hdl
+*.hwl
+*.hwm
+*.hwp
+
+# Device tree files
+*.dts
+*.dtsi
+*.dtb
+*.dtbo
+*.dtsv1
+*.dtso
+*.dtsi
+
+# Hardware drivers
+*.ko
+*.sys
+*.drv
+*.kext
+*.vxd
+*.acm
+
+# Hardware configuration
+*.hwcfg
+*.hwd
+*.hwl
+*.hwm
+*.hwp
+*.hwdb
+
+# ----------------------------------------------------------------------------
+# BARE METAL FILES
+# ----------------------------------------------------------------------------
+
+# Bare metal bootloaders
+*.bin
+*.img
+*.iso
+*.rom
+*.elf
+*.coff
+*.aout
+*.flat
+*.raw
+*.srec
+*.hex
+*.ihex
+*.s19
+*.s28
+*.s37
+*.srec
+
+# Bare metal firmware
+*.fw
+*.firmware
+*.rom
+*.bin
+*.elf
+*.axf
+*.out
+*.map
+*.lst
+*.sym
+*.dbg
+
+# UEFI files
+*.efi
+*.efi.signed
+*.efi.bak
+*.efi.old
+*.efi.new
+*.efi.unsigned
+*.efi.secure
+*.efi.insecure
+*.efi.debug
+*.efi.release
+*.efi.symbols
+
+# BIOS files
+*.rom
+*.bin
+*.fd
+*.cap
+*.hdr
+*.dat
+*.bios
+*.bios.bak
+*.bios.old
+*.bios.new
+*.bios.debug
+*.bios.release
+
+# Embedded system files
+*.hex
+*.bin
+*.elf
+*.s19
+*.srec
+*.cof
+*.out
+*.map
+*.lst
+*.sym
+*.dbg
+*.dump
+
+# Boot sector files
+*.bs
+*.mbr
+*.gpt
+*.vbr
+*.pbr
+*.boot
+*.bootsector
+*.bootrecord
+
+# ----------------------------------------------------------------------------
+# COMPILER AND BUILD ARTIFACTS
+# ----------------------------------------------------------------------------
+
+# Visual Studio
+*.sdf
+*.opensdf
+*.suo
+*.user
+*.userosscache
+*.vcxproj.user
+*.vcxproj.filters
+*.vcxproj.vspscc
+*.sln.docstates
+*.vssscc
+*.vspscc
+*.vstemplate
+*.vsp
+*.vspx
+*.vsmdi
+*.testsettings
+*.coveringsettings
+*.trx
+*.coverage
+*.coveragexml
+*.build
+*.buildlog
+*.lastbuildstate
+*.FileListAbsolute.txt
+*.log
+*.html
+*.css
+
+# GNU/GCC
+*.o
+*.lo
+*.la
+*.so
+*.so.*
+*.a
+*.dylib
+*.dll
+*.exe
+*.out
+*.su
+*.mod.c
+*.mod.o
+*.cmd
+*.symvers
+*.order
+*.gcno
+*.gcda
+*.gcov
+*.gch
+*.pch
+
+# Clang/LLVM
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.pch
+*.gch
+*.dSYM
+*.o.d
+
+# Rust Cargo
+target/
+debug/
+release/
+*.rlib
+*.rmeta
+*.rustc
+*.wasm
+*.wasm.opt
+Cargo.lock
+
+# Go
+*.a
+*.test
+*.cov
+*.out
+go.sum
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CMakeUserPresets.json
+*.cmake
+!CMakeLists.txt
+*.ninja
+*.ninja_deps
+*.ninja_log
+
+# Meson
+meson-private/
+meson-info/
+meson-logs/
+build/
+*.pyc
+*.pyo
+*.pyd
+
+# ----------------------------------------------------------------------------
+# PACKAGE MANAGER FILES
+# ----------------------------------------------------------------------------
+
+# npm
+node_modules/
+package-lock.json
+npm-debug.log
+npm-debug.log.*
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+.pnp/
+.pnp.js
+.pnp.mjs
+
+# pip
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
+*.exe
+*.egg-info/
+*.egg
+*.whl
+dist/
+build/
+.eggs/
+*.egg-info/
+*.dist-info/
+
+# Ruby
+*.gem
+*.rbc
+/.bundle/
+/vendor/bundle/
+Gemfile.lock
+*.rbx
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+pom.xml.bak
+release.properties
+dependency-reduced-pom.xml
+*.hprof
+*.log
+*.tmp
+
+# Gradle
+.gradle/
+build/
+gradle-app.setting
+gradle-wrapper.jar
+gradle-wrapper.properties
+*.gradle
+*.gradle.kts
+*.gradle.lockfile
+
+# Poetry
+poetry.lock
+*.toml.bak
+
+# ----------------------------------------------------------------------------
+# VERSION CONTROL FILES
+# ----------------------------------------------------------------------------
+
+# Git
+.git/
+.gitattributes
+.gitconfig
+.gitignore
+.gitkeep
+.gitmodules
+.gitreview
+.gitlab-ci.yml
+.github/
+.gitmessage
+.gitignore
+.gitkeep
+.gitmodules
+.gitreview
+.gitlab-ci.yml
+
+# SVN
+.svn/
+.svnignore
+.svnproperties
+.svnwc
+.svnconfig
+
+# Mercurial
+.hg/
+.hgignore
+.hgrc
+.hgstatus
+.hgsub
+.hgsubstate
+.hgtags
+
+# CVS
+CVS/
+.cvsignore
+.cvswrappers
+
+# Perforce
+.p4ignore
+.p4config
+.p4review
+.p4client
+.p4root
+
+# ----------------------------------------------------------------------------
+# IDE FILES
+# ----------------------------------------------------------------------------
+
+# VS Code
+.vscode/
+.vscodeignore
+.code-workspace
+*.code-workspace
+*.vsix
+*.vsixmanifest
+
+# Visual Studio
+.vs/
+*.sln
+*.suo
+*.user
+*.userprefs
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.vdproj
+*.vsp
+*.vspx
+*.vstemplate
+*.vssettings
+
+# CLion
+.idea/
+cmake-build-debug/
+cmake-build-release/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+*.launch
+*.factorypath
+*.prefs
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+*.xcuserstate
+*.xcuserdatad
+*.xccheckout
+*.xcscheme
+*.xcassets
+DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Android Studio
+.gradle/
+.idea/
+*.iml
+*.iws
+*.ipr
+build/
+local.properties
+*.apk
+*.aab
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+*.orig
+*.pyc
+__pycache__/
+.*.swp
+.*.swo
+
+# ----------------------------------------------------------------------------
+# DOCUMENTATION AND TEXT FILES
+# ----------------------------------------------------------------------------
+
+*.md
+*.markdown
+*.txt
+*.rst
+*.pdf
+*.doc
+*.docx
+*.odt
+*.rtf
+*.tex
+*.dvi
+*.ps
+*.epub
+*.mobi
+*.azw
+*.azw3
+*.ibooks
+
+# ----------------------------------------------------------------------------
+# LOG FILES
+# ----------------------------------------------------------------------------
+
+*.log
+*.log.*
+logs/
+*.log.gz
+*.log.bz2
+*.log.xz
+*.log.zip
+*.trace
+*.debug
+*.info
+*.warn
+*.error
+*.fatal
+*.audit
+
+# ----------------------------------------------------------------------------
+# DATABASE FILES
+# ----------------------------------------------------------------------------
+
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db-journal
+*.frm
+*.ibd
+*.myd
+*.myi
+*.csv
+*.tsv
+*.sql
+*.dump
+*.backup
+*.bak
+
+# ----------------------------------------------------------------------------
+# TEMPORARY FILES
+# ----------------------------------------------------------------------------
+
+*.tmp
+*.temp
+*.swp
+*.swo
+*.~*
+*~
+*.cache
+*.cached
+*.caching
+*.lock
+*.locked
+*.unlock
+*.bak
+*.old
+*.new
+*.orig
+*.backup
+*.backup.*
+*.save
+*.saved
+*.autosave
+
+# ----------------------------------------------------------------------------
+# NETWORK AND CACHE FILES
+# ----------------------------------------------------------------------------
+
+*.cache
+*.cached
+*.caching
+*.thumb
+*.thm
+*.thumbnail
+*.preview
+*.manifest
+*.manifest.cache
+*.url
+*.lnk
+*.desktop
+*.directory
+
+# ----------------------------------------------------------------------------
+# ENVIRONMENT AND CONFIGURATION FILES
+# ----------------------------------------------------------------------------
+
+.env
+.env.*
+.env.local
+.env.dev
+.env.prod
+.env.test
+.env.staging
+.env.production
+.env.development
+.env.example
+.env.sample
+.env.template
+
+# ----------------------------------------------------------------------------
+# MISCELLANEOUS
+# ----------------------------------------------------------------------------
+
+# Archive files
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.tbz2
+*.tar.xz
+*.txz
+*.lz
+*.lzma
+*.zst
+*.zstd
+*.br
+*.gz
+*.bz2
+*.xz
+*.z
+
+# Media files (optional - uncomment if needed)
+#*.mp3
+#*.mp4
+#*.avi
+#*.mov
+#*.wmv
+#*.flv
+#*.mkv
+#*.webm
+#*.ogg
+#*.wav
+#*.flac
+#*.aac
+#*.m4a
+#*.m4v
+#*.3gp
+#*.ogv
+
+# Image files (optional - uncomment if needed)
+#*.jpg
+#*.jpeg
+#*.png
+#*.gif
+#*.bmp
+#*.tiff
+#*.tif
+#*.ico
+#*.svg
+#*.webp
+
+# ============================================================================
+# END OF .bmsignore
+# ============================================================================

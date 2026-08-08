@@ -1,0 +1,144 @@
+// tool.ii - SWIG Interface for Tool (C style)
+%module bms_tool_c
+
+%{
+#include "tool.h"
+#include "toolbar.h"
+%}
+
+// C-style wrapper
+typedef struct Tool Tool;
+
+// Function declarations
+extern Tool* tool_create(int type);
+extern void tool_destroy(Tool* tool);
+extern const char* tool_get_id(const Tool* tool);
+extern void tool_set_id(Tool* tool, const char* id);
+extern const char* tool_get_tooltip(const Tool* tool);
+extern void tool_set_tooltip(Tool* tool, const char* tooltip);
+extern int tool_get_type(const Tool* tool);
+extern int tool_get_state(const Tool* tool);
+extern void tool_set_state(Tool* tool, int state);
+extern int tool_is_enabled(const Tool* tool);
+extern void tool_set_enabled(Tool* tool, int enabled);
+extern int tool_is_visible(const Tool* tool);
+extern void tool_set_visible(Tool* tool, int visible);
+extern int tool_get_x(const Tool* tool);
+extern int tool_get_y(const Tool* tool);
+extern void tool_set_position(Tool* tool, int x, int y);
+extern int tool_get_width(const Tool* tool);
+extern int tool_get_height(const Tool* tool);
+extern void tool_set_size(Tool* tool, int width, int height);
+extern const char* tool_get_label(const Tool* tool);
+extern void tool_set_label(Tool* tool, const char* label);
+extern const char* tool_get_icon(const Tool* tool);
+extern void tool_set_icon(Tool* tool, const char* icon);
+extern const char* tool_get_value(const Tool* tool);
+extern void tool_set_value(Tool* tool, const char* value);
+extern void tool_add_child(Tool* parent, Tool* child);
+extern void tool_remove_child(Tool* parent, Tool* child);
+extern Tool* tool_get_parent(const Tool* tool);
+extern int tool_get_child_count(const Tool* tool);
+extern Tool* tool_get_child(const Tool* tool, int index);
+extern void tool_render(Tool* tool, void* context);
+extern void tool_update(Tool* tool);
+
+// Python extensions
+%pythoncode {
+    class ToolWrapper:
+        def __init__(self, tool):
+            self._tool = tool
+        
+        def __del__(self):
+            if self._tool:
+                tool_destroy(self._tool)
+        
+        @property
+        def id(self):
+            return tool_get_id(self._tool)
+        
+        @id.setter
+        def id(self, value):
+            tool_set_id(self._tool, value)
+        
+        @property
+        def label(self):
+            return tool_get_label(self._tool)
+        
+        @label.setter
+        def label(self, value):
+            tool_set_label(self._tool, value)
+        
+        @property
+        def tooltip(self):
+            return tool_get_tooltip(self._tool)
+        
+        @tooltip.setter
+        def tooltip(self, value):
+            tool_set_tooltip(self._tool, value)
+        
+        @property
+        def enabled(self):
+            return tool_is_enabled(self._tool)
+        
+        @enabled.setter
+        def enabled(self, value):
+            tool_set_enabled(self._tool, value)
+        
+        @property
+        def visible(self):
+            return tool_is_visible(self._tool)
+        
+        @visible.setter
+        def visible(self, value):
+            tool_set_visible(self._tool, value)
+        
+        @property
+        def x(self):
+            return tool_get_x(self._tool)
+        
+        @x.setter
+        def x(self, value):
+            tool_set_position(self._tool, value, self.y)
+        
+        @property
+        def y(self):
+            return tool_get_y(self._tool)
+        
+        @y.setter
+        def y(self, value):
+            tool_set_position(self._tool, self.x, value)
+        
+        @property
+        def width(self):
+            return tool_get_width(self._tool)
+        
+        @width.setter
+        def width(self, value):
+            tool_set_size(self._tool, value, self.height)
+        
+        @property
+        def height(self):
+            return tool_get_height(self._tool)
+        
+        @height.setter
+        def height(self, value):
+            tool_set_size(self._tool, self.width, value)
+        
+        def add_child(self, child):
+            if isinstance(child, ToolWrapper):
+                tool_add_child(self._tool, child._tool)
+        
+        def get_children(self):
+            count = tool_get_child_count(self._tool)
+            return [ToolWrapper(tool_get_child(self._tool, i)) for i in range(count)]
+        
+        def render(self):
+            tool_render(self._tool, None)
+        
+        def update(self):
+            tool_update(self._tool)
+        
+        def __repr__(self):
+            return f"<Tool label='{self.label}' type={tool_get_type(self._tool)}>"
+}

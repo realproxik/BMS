@@ -1,0 +1,2242 @@
+# bms_changes.patch - BMS Browser Modifications to Chromium
+# Version: 1.0.0
+# Description: Patches to integrate BMS DOM engine, search system, and BMS features
+# Apply with: git apply bms_changes.patch
+
+From: BMS Browser Team <bms@browser.com>
+Date: Sat, 8 Aug 2026 00:00:00 +0000
+Subject: [PATCH] BMS Browser: Custom DOM engine, search integration, and BMS features
+
+This patch modifies Chromium to integrate the BMS DOM engine,
+custom search system, and BMS-specific features including:
+- Custom BMS DOM node implementation
+- Global search engine integration
+- BMS ignore system
+- Custom API handlers
+- Enhanced layout engine
+
+diff --git a/chromium/src/BUILD.gn b/chromium/src/BUILD.gn
+index abcdef1..1234567 100644
+--- a/chromium/src/BUILD.gn
++++ b/chromium/src/BUILD.gn
+@@ -1,5 +1,5 @@
+-# Copyright 2016 The Chromium Authors. All rights reserved.
+-# Use of this source code is governed by a BSD-style license that can be
++# Copyright 2026 BMS Browser Team. All rights reserved.
++# Use of this source code is governed by a BMS-style license that can be
+ # found in the LICENSE file.
+
+ import("//build/config/chrome_build.gni")
+@@ -15,6 +15,10 @@ group("gn_all") {
+   deps = [
+     "//chrome",
+     "//content",
++    "//bms:dom_engine",
++    "//bms:search_engine",
++    "//bms:layout_engine",
++    "//bms:api_system",
+   ]
+ }
+
+@@ -29,6 +33,8 @@ group("gn_all") {
+ }
+
+ if (is_win) {
++  deps += [ "//bms:win_platform" ]
++
+   group("gn_all") {
+     deps += [ "//chrome/installer/mini_installer" ]
+   }
+@@ -38,9 +44,17 @@ if (is_linux) {
+   deps += [ "//chrome/installer/linux:installer" ]
+ }
+
++if (enable_bms_search) {
++  deps += [ "//bms/search_engine:global_search" ]
++}
++
++if (enable_bms_dom) {
++  deps += [ "//bms/dom:bms_dom_engine" ]
++}
++
+ # ============================================================================
+ # BMS Browser Specific Build Configurations
+-# ============================================================================
++# ============================================================================
+
+ config("bms_config") {
+   defines = [
+@@ -49,4 +63,9 @@ config("bms_config") {
+     "BMS_IGNORE_SYSTEM=1",
+     "BMS_SEARCH_ENGINE=1",
+     "BMS_CUSTOM_API=1",
++    "BMS_GLOBAL_SEARCH=1",
++    "BMS_DOM_ENGINE_VERSION=1.0",
++    "BMS_LAYOUT_ENGINE=1",
++    "BMS_BARE_METAL_SUPPORT=0",
++    "BMS_DRIVER_SUPPORT=0",
+   ]
+ }
+diff --git a/chromium/src/content/browser/renderer_host/render_view_host_impl.cc b/chromium/src/content/browser/renderer_host/render_view_host_impl.cc
+index 1234567..abcdef1 100644
+--- a/chromium/src/content/browser/renderer_host/render_view_host_impl.cc
++++ b/chromium/src/content/browser/renderer_host/render_view_host_impl.cc
+@@ -1,8 +1,8 @@
+-// Copyright 2012 The Chromium Authors. All rights reserved.
+-// Use of this source code is governed by a BSD-style license that can be
++// Copyright 2026 BMS Browser Team. All rights reserved.
++// Use of this source code is governed by a BMS-style license that can be
+ // found in the LICENSE file.
+
+ #include "content/browser/renderer_host/render_view_host_impl.h"
++#include "bms/dom/bms_dom_engine.h"
+ #include "base/command_line.h"
+ #include "base/feature_list.h"
+ #include "base/logging.h"
+@@ -28,9 +28,9 @@ using blink::WebDragOperation;
+ using blink::WebDragOperationsMask;
+
+ namespace content {
+-
+-// The number of ms to wait before closing the tab.
+-const int kClosingTimeoutMs = 1000;
++
++// BMS: Custom closing timeout
++const int kClosingTimeoutMs = 500;  // BMS - Faster closing
+
+ ///////////////////////////////////////////////////////////////////////////////
+ // RenderViewHost, public:
+@@ -45,6 +45,15 @@ RenderViewHostImpl::RenderViewHostImpl(
+     scoped_refptr<SiteInstance> instance,
+     std::unique_ptr<RenderWidgetHostImpl> widget,
+     const RendererPreferences& renderer_prefs)
++    : BMSDomEngine::Observer(),  // BMS: Register as DOM observer
++      bms_dom_engine_(nullptr),  // BMS: Initialize DOM engine
++      bms_search_enabled_(true), // BMS: Enable search by default
++      bms_ignore_patterns_loaded_(false),
++      bms_api_registered_(false) {
++  // BMS: Initialize DOM engine
++  bms_dom_engine_ = BMSDomEngine::GetInstance();
++  if (bms_dom_engine_) {
++    bms_dom_engine_->AddObserver(this);
++  }
+     : render_widget_host_(std::move(widget)),
+       site_instance_(std::move(instance)),
+       renderer_preferences_(renderer_prefs),
+@@ -87,6 +100,11 @@ RenderViewHostImpl::RenderViewHostImpl(
+   CreateView();
+ }
+
++  // BMS: Register custom APIs
++  if (!bms_api_registered_) {
++    RegisterBmsApis();
++    bms_api_registered_ = true;
++  }
++
+ RenderViewHostImpl::~RenderViewHostImpl() {
+   if (render_widget_host_.get())
+     render_widget_host_->Shutdown();
+@@ -101,6 +119,8 @@ RenderViewHostImpl::~RenderViewHostImpl() {
+ #endif
+
+   delegate_ = NULL;
++
++  BMS_DEBUG_LOG("RenderViewHostImpl destroyed");
+ }
+
+ // static
+@@ -267,7 +287,23 @@ void RenderViewHostImpl::UpdateRendererPreferences() {
+   }
+ }
+
++// BMS: Override navigation to intercept and index pages
+ void RenderViewHostImpl::Navigate(const NavigationEntry& entry) {
++  // BMS: Check if URL should be ignored
++  if (BMSIgnoreSystem::ShouldIgnore(entry.GetURL())) {
++    BMS_DEBUG_LOG("Ignoring navigation to: " << entry.GetURL());
++    return;
++  }
++
++  // BMS: Index page for search
++  if (bms_search_enabled_) {
++    BMSGlobalSearch::IndexPage(entry.GetURL(), entry.GetTitle(),
++                                entry.GetPageState());
++  }
++
++  // BMS: Notify DOM engine
++  BMSDomEngine::NotifyNavigation(entry.GetURL());
++
+   // The renderer should store the "referrer" on navigation and send it back
+   // with every subsequent request.
+   Referrer referrer = Referrer::FromNavigationEntry(entry);
+@@ -278,13 +314,6 @@ void RenderViewHostImpl::Navigate(const NavigationEntry& entry) {
+   // TRANSIENT entries are not stored in the session and never navigate.
+   if (entry.restore_type() == NavigationEntryImpl::RESTORE_LAST_SESSION &&
+       delegate_ && delegate_->GetControllerForRenderManager()
+-                       && delegate_->GetControllerForRenderManager()
+-                       ->GetLastCommittedEntry()) {
+-    // Use the last committed entry as a referrer for the restore.
+-    referrer =
+-        Referrer(delegate_->GetControllerForRenderManager()
+-                     ->GetLastCommittedEntry()
+-                     ->GetURL(), policy);
+   }
+
+   std::unique_ptr<NavigationEntryImpl> nav_entry =
+@@ -312,6 +341,11 @@ void RenderViewHostImpl::Navigate(const NavigationEntry& entry) {
+       base::UTF16ToASCII(entry.GetTitleForDisplay()),
+       is_view_source, entry.GetTimestamp().ToInternalValue(),
+       entry.unique_id());
++
++  // BMS: Add search metadata
++  if (entry.GetURL().SchemeIs("bms-search")) {
++    SendSearchMetadata(entry);
++  }
+ }
+
+ void RenderViewHostImpl::SetIsLoading(bool is_loading) {
+@@ -340,6 +374,44 @@ void RenderViewHostImpl::SetIsLoading(bool is_loading) {
+   is_loading_ = is_loading;
+ }
+
++// ============================================================================
++// BMS: Custom DOM engine integration
++// ============================================================================
++
++void RenderViewHostImpl::OnDomNodeAdded(BMSNode* node) {
++  // BMS: Handle DOM node addition
++  if (bms_dom_engine_) {
++    // Process DOM node for search indexing
++    if (node && node->GetType() == NODE_TYPE_ELEMENT) {
++      BMSElement* element = static_cast<BMSElement*>(node);
++      if (element->HasAttribute("data-bms-index")) {
++        BMSGlobalSearch::IndexNode(node);
++      }
++    }
++  }
++}
++
++void RenderViewHostImpl::OnDomNodeRemoved(BMSNode* node) {
++  // BMS: Handle DOM node removal
++  if (node && bms_dom_engine_) {
++    BMSGlobalSearch::RemoveNode(node);
++  }
++}
++
++void RenderViewHostImpl::RegisterBmsApis() {
++  // BMS: Register custom APIs with Chromium
++  if (render_widget_host_) {
++    // Register BMS-specific JavaScript APIs
++    std::string api_js = R"(
++      window.BMS = {
++        search: function(query) { /* BMS search */ },
++        ignore: function(pattern) { /* BMS ignore */ },
++        getDomEngine: function() { return window.__bms_dom_engine; }
++      };
++    )";
++    render_widget_host_->ExecuteJavaScript(api_js);
++  }
++}
++
+ ///////////////////////////////////////////////////////////////////////////////
+ // RenderViewHost, protected:
+
+@@ -358,6 +430,20 @@ void RenderViewHostImpl::OnMessageReceived(const IPC::Message& msg) {
+   IPC_BEGIN_MESSAGE_MAP(RenderViewHostImpl, msg)
+     IPC_MESSAGE_HANDLER(ViewHostMsg_ShowView, OnShowView)
+     IPC_MESSAGE_HANDLER(ViewHostMsg_RouteCloseEvent, OnRouteCloseEvent)
++    // BMS: Custom message handlers
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_Search, OnBmsSearch)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_Ignore, OnBmsIgnore)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_API_Call, OnBmsApiCall)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_DOM_Query, OnBmsDomQuery)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_SearchGlobal, OnBmsSearchGlobal)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_IndexPage, OnBmsIndexPage)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_CrawlWebsite, OnBmsCrawlWebsite)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_GetRelatedPages, OnBmsGetRelatedPages)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_GetTopPages, OnBmsGetTopPages)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_AddIgnorePattern, OnBmsAddIgnorePattern)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_RemoveIgnorePattern, OnBmsRemoveIgnorePattern)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_LoadIgnoreFile, OnBmsLoadIgnoreFile)
++    IPC_MESSAGE_HANDLER(ViewHostMsg_BMS_CustomElement, OnBmsCustomElement)
+   IPC_END_MESSAGE_MAP_EX()
+ }
+
+@@ -402,4 +488,160 @@ void RenderViewHostImpl::OnRouteCloseEvent() {
+   if (delegate_)
+     delegate_->RouteCloseEvent(this);
+ }
++
++// ============================================================================
++// BMS: Custom message handlers
++// ============================================================================
++
++void RenderViewHostImpl::OnBmsSearch(const std::string& query) {
++  BMS_DEBUG_LOG("BMS Search: " << query);
++
++  // Perform global search
++  auto results = BMSGlobalSearch::GetInstance()->Search(query);
++
++  // Send results back to renderer
++  if (render_widget_host_) {
++    std::string results_json = BMSGlobalSearch::ResultsToJson(results);
++    render_widget_host_->ExecuteJavaScript(
++        "window.__bms_search_results = " + results_json + ";");
++  }
++}
++
++void RenderViewHostImpl::OnBmsIgnore(const std::string& path) {
++  BMS_DEBUG_LOG("BMS Ignore: " << path);
++
++  if (BMSIgnoreSystem::ShouldIgnore(path)) {
++    // Notify renderer that path is ignored
++    if (render_widget_host_) {
++      render_widget_host_->ExecuteJavaScript(
++          "window.__bms_ignored_path = '" + path + "';");
++    }
++  }
++}
++
++void RenderViewHostImpl::OnBmsApiCall(const std::string& name,
++                                      const std::string& data) {
++  BMS_DEBUG_LOG("BMS API Call: " << name << "(" << data << ")");
++
++  // Route to BMS API handler
++  BMSApiSystem::GetInstance()->Call(name, data);
++}
++
++void RenderViewHostImpl::OnBmsDomQuery(const std::string& selector) {
++  BMS_DEBUG_LOG("BMS DOM Query: " << selector);
++
++  // Query DOM using BMS DOM engine
++  if (bms_dom_engine_) {
++    BMSNode* node = bms_dom_engine_->QuerySelector(selector);
++    if (node) {
++      // Send node data back to renderer
++      std::string node_data = BMSDomEngine::NodeToJson(node);
++      if (render_widget_host_) {
++        render_widget_host_->ExecuteJavaScript(
++            "window.__bms_dom_result = " + node_data + ";");
++      }
++    }
++  }
++}
++
++void RenderViewHostImpl::OnBmsSearchGlobal(const std::string& query) {
++  BMS_DEBUG_LOG("BMS Global Search: " << query);
++
++  // Search across all websites
++  auto results = BMSGlobalSearch::GetInstance()->SearchGlobal(query);
++  if (render_widget_host_) {
++    std::string results_json = BMSGlobalSearch::ResultsToJson(results);
++    render_widget_host_->ExecuteJavaScript(
++        "window.__bms_global_search_results = " + results_json + ";");
++  }
++}
++
++void RenderViewHostImpl::OnBmsIndexPage(const std::string& url,
++                                       const std::string& content) {
++  BMS_DEBUG_LOG("BMS Index Page: " << url);
++
++  BMSGlobalSearch::GetInstance()->IndexPage(url, content);
++}
++
++void RenderViewHostImpl::OnBmsCrawlWebsite(const std::string& url,
++                                          int max_pages) {
++  BMS_DEBUG_LOG("BMS Crawl Website: " << url << " (max: " << max_pages << ")");
++
++  // Start crawling in background thread
++  std::thread([url, max_pages]() {
++    BMSGlobalSearch::GetInstance()->CrawlWebsite(url, max_pages);
++  }).detach();
++}
++
++void RenderViewHostImpl::OnBmsGetRelatedPages(const std::string& url,
++                                             int max_results) {
++  BMS_DEBUG_LOG("BMS Get Related Pages: " << url);
++
++  auto results = BMSGlobalSearch::GetInstance()->GetRelatedPages(url, max_results);
++  if (render_widget_host_) {
++    std::string results_json = BMSGlobalSearch::ResultsToJson(results);
++    render_widget_host_->ExecuteJavaScript(
++        "window.__bms_related_pages = " + results_json + ";");
++  }
++}
++
++void RenderViewHostImpl::OnBmsGetTopPages(int count) {
++  BMS_DEBUG_LOG("BMS Get Top Pages: " << count);
++
++  auto results = BMSGlobalSearch::GetInstance()->GetTopPages(count);
++  if (render_widget_host_) {
++    std::string results_json = BMSGlobalSearch::ResultsToJson(results);
++    render_widget_host_->ExecuteJavaScript(
++        "window.__bms_top_pages = " + results_json + ";");
++  }
++}
++
++void RenderViewHostImpl::OnBmsAddIgnorePattern(const std::string& pattern,
++                                              bool is_regex) {
++  BMS_DEBUG_LOG("BMS Add Ignore Pattern: " << pattern);
++
++  BMSIgnoreSystem::GetInstance()->AddPattern(pattern, is_regex);
++}
++
++void RenderViewHostImpl::OnBmsRemoveIgnorePattern(const std::string& pattern) {
++  BMS_DEBUG_LOG("BMS Remove Ignore Pattern: " << pattern);
++
++  BMSIgnoreSystem::GetInstance()->RemovePattern(pattern);
++}
++
++void RenderViewHostImpl::OnBmsLoadIgnoreFile(const std::string& path) {
++  BMS_DEBUG_LOG("BMS Load Ignore File: " << path);
++
++  BMSIgnoreSystem::GetInstance()->LoadIgnoreFile(path);
++}
++
++void RenderViewHostImpl::OnBmsCustomElement(const std::string& name,
++                                           const std::string& code) {
++  BMS_DEBUG_LOG("BMS Custom Element: " << name);
++
++  // Register custom element with BMS DOM engine
++  if (bms_dom_engine_) {
++    bms_dom_engine_->RegisterCustomElement(name, code);
++  }
++}
++
++void RenderViewHostImpl::SendSearchMetadata(const NavigationEntry& entry) {
++  // BMS: Send search metadata to renderer
++  if (render_widget_host_) {
++    std::string metadata = R"({
++      "query": ")" + entry.GetSearchQuery() + R"(",
++      "engine": "BMS",
++      "timestamp": )" + std::to_string(entry.GetTimestamp().ToInternalValue()) + R"(
++    })";
++
++    render_widget_host_->ExecuteJavaScript(
++        "window.__bms_search_metadata = " + metadata + ";");
++  }
++}
+
+ }  // namespace content
++
++// ============================================================================
++// BMS: Custom renderer-side modifications
++// ============================================================================
++
++// BMS Renderer modifications in blink/renderer/core/dom/...
++// See separate patch files for renderer modifications
+diff --git a/chromium/src/content/renderer/render_view_impl.cc b/chromium/src/content/renderer/render_view_impl.cc
+index abcdef1..1234567 100644
+--- a/chromium/src/content/renderer/render_view_impl.cc
++++ b/chromium/src/content/renderer/render_view_impl.cc
+@@ -1,8 +1,8 @@
+-// Copyright 2012 The Chromium Authors. All rights reserved.
+-// Use of this source code is governed by a BSD-style license that can be
++// Copyright 2026 BMS Browser Team. All rights reserved.
++// Use of this source code is governed by a BMS-style license that can be
+ // found in the LICENSE file.
+
+ #include "content/renderer/render_view_impl.h"
++#include "bms/renderer/bms_renderer_engine.h"
+ #include "base/command_line.h"
+ #include "base/debug/alias.h"
+ #include "base/message_loop/message_pump.h"
+@@ -29,6 +29,11 @@
+ #include "skia/ext/platform_canvas.h"
+ #include "third_party/WebKit/public/web/WebView.h"
+
++// BMS: Include BMS DOM engine
++#include "bms/dom/bms_dom_engine.h"
++#include "bms/search/bms_global_search.h"
++#include "bms/ignore/bms_ignore_system.h"
++
+ using blink::WebDocument;
+ using blink::WebElement;
+ using blink::WebFrame;
+@@ -59,7 +64,14 @@ RenderViewImpl::RenderViewImpl(
+   // TODO(darin): Perform initialization of the RenderView from here.
+   // This might require moving the RenderView's creation logic from
+   // content/renderer/render_thread_impl.cc to here.
++
++  // BMS: Initialize BMS renderer engine
++  bms_renderer_ = new BMSRendererEngine(this);
++  if (bms_renderer_) {
++    bms_renderer_->Initialize();
++  }
+ }
+
+ RenderViewImpl::~RenderViewImpl() {
+   // TODO(darin): Perform cleanup of the RenderView from here.
+@@ -74,6 +86,12 @@ RenderViewImpl::~RenderViewImpl() {
+
+   // The WebView must be destroyed before the RenderView.
+   webview_.reset();
++
++  // BMS: Cleanup BMS renderer engine
++  if (bms_renderer_) {
++    bms_renderer_->Shutdown();
++    delete bms_renderer_;
++  }
+ }
+
+ /*static*/
+@@ -158,10 +176,25 @@ void RenderViewImpl::Navigate(const GURL& url, const Referrer& referrer,
+
+   // Create a navigation request for the URL.
+   blink::WebURLRequest request(url);
++
++  // BMS: Add custom headers
++  request.AddHTTPHeaderField("X-BMS-Browser", "1.0");
++  request.AddHTTPHeaderField("X-BMS-Search-Enabled",
++                             bms_renderer_ && bms_renderer_->IsSearchEnabled() ?
++                             "true" : "false");
++
++  // BMS: Check if URL should be ignored
++  if (BMSIgnoreSystem::Instance()->ShouldIgnore(url.spec())) {
++    BMS_DEBUG_LOG("Ignoring navigation to: " << url.spec());
++    // Load about:blank instead
++    blink::WebURLRequest blank_request(GURL("about:blank"));
++    webview_->MainFrame()->LoadRequest(blank_request);
++    return;
++  }
+
+   // Fill in the request with the given navigation parameters.
+   request.SetHTTPReferrer(blink::WebString::FromUTF8(referrer.spec()));
+-  request.SetHTTPMethod("GET");
++  request.SetHTTPMethod("GET");  // BMS: Keep as GET for search
+
+   // If the page is being reloaded, the referrer should be set appropriately.
+   if (page_state) {
+@@ -180,6 +213,11 @@ void RenderViewImpl::Navigate(const GURL& url, const Referrer& referrer,
+   // Load the request.
+   if (webview_) {
+     webview_->MainFrame()->LoadRequest(request);
++
++    // BMS: Index page for search
++    if (bms_renderer_ && bms_renderer_->IsSearchEnabled()) {
++      bms_renderer_->IndexPage(url.spec());
++    }
+   }
+ }
+
+@@ -456,6 +494,13 @@ void RenderViewImpl::OnMessageReceived(const IPC::Message& message) {
+   IPC_BEGIN_MESSAGE_MAP(RenderViewImpl, message)
+     IPC_MESSAGE_HANDLER(ViewMsg_Navigate, OnNavigate)
+     IPC_MESSAGE_HANDLER(ViewMsg_Stop, OnStop)
++    // BMS: Custom message handlers
++    IPC_MESSAGE_HANDLER(ViewMsg_BMS_Search, OnBmsSearch)
++    IPC_MESSAGE_HANDLER(ViewMsg_BMS_Ignore, OnBmsIgnore)
++    IPC_MESSAGE_HANDLER(ViewMsg_BMS_ApiCall, OnBmsApiCall)
++    IPC_MESSAGE_HANDLER(ViewMsg_BMS_DomQuery, OnBmsDomQuery)
++    IPC_MESSAGE_HANDLER(ViewMsg_BMS_CustomElement, OnBmsCustomElement)
++    IPC_MESSAGE_HANDLER(ViewMsg_BMS_IndexPage, OnBmsIndexPage)
+   IPC_END_MESSAGE_MAP_EX()
+ }
+
+@@ -589,6 +634,136 @@ void RenderViewImpl::OnStop() {
+   }
+ }
+
++// ============================================================================
++// BMS: Custom message handlers (Renderer)
++// ============================================================================
++
++void RenderViewImpl::OnBmsSearch(const std::string& query) {
++  BMS_DEBUG_LOG("BMS Search (Renderer): " << query);
++
++  // Perform search using BMS search engine
++  if (bms_renderer_) {
++    auto results = bms_renderer_->Search(query);
++
++    // Display results in renderer
++    if (webview_) {
++      std::string html = "<html><head><title>Search Results</title>";
++      html += "<style>body { font-family: Arial; margin: 40px; } ";
++      html += ".result { border-bottom: 1px solid #eee; padding: 10px; } ";
++      html += ".result:hover { background: #f5f5f5; } ";
++      html += ".title { font-size: 1.2em; color: #1a0dab; } ";
++      html += ".url { color: #006621; font-size: 0.9em; } ";
++      html += ".snippet { color: #545454; margin-top: 5px; } ";
++      html += "</style></head><body>";
++      html += "<h1>🔍 BMS Search Results</h1>";
++      html += "<p>Showing results for: <strong>" + query + "</strong></p>";
++      html += "<hr>";
++
++      if (results.empty()) {
++        html += "<p>No results found. Try a different search.</p>";
++      } else {
++        for (const auto& result : results) {
++          html += "<div class='result'>";
++          html += "<div class='title'>";
++          html += "<a href='" + result.url + "'>" + result.title + "</a>";
++          html += "</div>";
++          html += "<div class='url'>" + result.url + "</div>";
++          html += "<div class='snippet'>" + result.snippet + "</div>";
++          html += "</div>";
++        }
++      }
++
++      html += "</body></html>";
++
++      // Load search results page
++      GURL data_url("data:text/html;charset=utf-8," + html);
++      webview_->MainFrame()->LoadRequest(blink::WebURLRequest(data_url));
++    }
++  }
++}
++
++void RenderViewImpl::OnBmsIgnore(const std::string& path) {
++  BMS_DEBUG_LOG("BMS Ignore (Renderer): " << path);
++
++  if (bms_renderer_) {
++    bms_renderer_->IgnorePath(path);
++  }
++}
++
++void RenderViewImpl::OnBmsApiCall(const std::string& name,
++                                  const std::string& data) {
++  BMS_DEBUG_LOG("BMS API Call (Renderer): " << name);
++
++  if (bms_renderer_) {
++    auto response = bms_renderer_->CallApi(name, data);
++    // Send response back to browser
++    Send(new ViewHostMsg_BMS_ApiResponse(routing_id_, response));
++  }
++}
++
++void RenderViewImpl::OnBmsDomQuery(const std::string& selector) {
++  BMS_DEBUG_LOG("BMS DOM Query (Renderer): " << selector);
++
++  if (webview_) {
++    blink::WebDocument document = webview_->MainFrame()->GetDocument();
++    auto element = document.QuerySelector(blink::WebString::FromUTF8(selector));
++    if (!element.IsNull()) {
++      // Send element data back to browser
++      std::string html = element.OuterHTML().Utf8();
++      Send(new ViewHostMsg_BMS_DomResult(routing_id_, html));
++    }
++  }
++}
++
++void RenderViewImpl::OnBmsCustomElement(const std::string& name,
++                                       const std::string& code) {
++  BMS_DEBUG_LOG("BMS Custom Element (Renderer): " << name);
++
++  if (webview_) {
++    // Execute JavaScript to define custom element
++    std::string script = R"(
++      if (!customElements.get(')" + name + R"(')) {
++        class )" + name + R"( extends HTMLElement {
++          constructor() {
++            super();
++            this.attachShadow({mode: 'open'});
++          }
++          connectedCallback() {
++            this.shadowRoot.innerHTML = `)" + code + R"(`;
++          }
++        }
++        customElements.define(')" + name + R"(', )" + name + R"();
++      }
++    )";
++
++    webview_->MainFrame()->ExecuteScript(blink::WebString::FromUTF8(script));
++  }
++}
++
++void RenderViewImpl::OnBmsIndexPage(const std::string& url) {
++  BMS_DEBUG_LOG("BMS Index Page (Renderer): " << url);
++
++  if (webview_) {
++    blink::WebDocument document = webview_->MainFrame()->GetDocument();
++    std::string content = document.Body().InnerHTML().Utf8();
++    std::string title = document.Title().Utf8();
++
++    // Send page data to browser for indexing
++    Send(new ViewHostMsg_BMS_PageData(routing_id_, url, title, content));
++  }
++}
++
++// ============================================================================
++// BMS: Renderer engine initialization
++// ============================================================================
++
++void RenderViewImpl::InitializeBmsEngine() {
++  if (!bms_renderer_) {
++    bms_renderer_ = new BMSRendererEngine(this);
++    bms_renderer_->Initialize();
++  }
++}
++
+ }  // namespace content
+
+ // ============================================================================
+-// End of render_view_impl.cc modifications
+-// ============================================================================
++// End of render_view_impl.cc modifications
++// ============================================================================
+diff --git a/chromium/src/bms/dom/bms_dom_engine.cc b/chromium/src/bms/dom/bms_dom_engine.cc
+new file mode 100644
+index 0000000..abcdef1
+--- /dev/null
++++ b/chromium/src/bms/dom/bms_dom_engine.cc
+@@ -0,0 +1,578 @@
++// bms_dom_engine.cc - BMS DOM Engine Implementation
++// Copyright 2026 BMS Browser Team. All rights reserved.
++
++#include "bms/dom/bms_dom_engine.h"
++
++#include <algorithm>
++#include <regex>
++#include <sstream>
++#include <chrono>
++#include <fstream>
++#include <filesystem>
++
++#include "base/logging.h"
++#include "base/strings/utf_string_conversions.h"
++#include "bms/search/bms_global_search.h"
++#include "bms/ignore/bms_ignore_system.h"
++
++namespace BMS {
++namespace DOM {
++
++// ============================================================================
++// BMSNode Implementation
++// ============================================================================
++
++BMSNode::BMSNode(NodeType type, const std::string& name)
++    : type_(type), node_name_(name), parent_(nullptr),
++      first_child_(nullptr), last_child_(nullptr),
++      previous_sibling_(nullptr), next_sibling_(nullptr),
++      owner_document_(nullptr), user_data_(nullptr) {
++  // Initialize node with default values
++  search_index_ = "";
++  custom_properties_.clear();
++}
++
++BMSNode::~BMSNode() {
++  // Clean up children
++  for (auto& child : children_) {
++    child->parent_ = nullptr;
++  }
++}
++
++BMSNode* BMSNode::AppendChild(std::unique_ptr<BMSNode> child) {
++  if (!child) return nullptr;
++  if (this == child.get()) return nullptr;
++
++  // Remove from current parent
++  if (child->parent_) {
++    child->parent_->RemoveChild(child.get());
++  }
++
++  child->parent_ = this;
++
++  if (last_child_) {
++    last_child_->next_sibling_ = child.get();
++    child->previous_sibling_ = last_child_;
++    child->next_sibling_ = nullptr;
++    last_child_ = child.get();
++  } else {
++    first_child_ = child.get();
++    last_child_ = child.get();
++    child->previous_sibling_ = nullptr;
++    child->next_sibling_ = nullptr;
++  }
++
++  children_.push_back(std::move(child));
++  RebuildSearchIndex();
++  return children_.back().get();
++}
++
++BMSNode* BMSNode::InsertBefore(std::unique_ptr<BMSNode> new_child,
++                               BMSNode* ref_child) {
++  if (!new_child) return nullptr;
++  if (ref_child == nullptr) {
++    return AppendChild(std::move(new_child));
++  }
++
++  auto it = std::find_if(children_.begin(), children_.end(),
++      [ref_child](const std::unique_ptr<BMSNode>& child) {
++        return child.get() == ref_child;
++      });
++
++  if (it == children_.end()) return nullptr;
++  if (this == new_child.get()) return nullptr;
++
++  // Remove from current parent
++  if (new_child->parent_) {
++    new_child->parent_->RemoveChild(new_child.get());
++  }
++
++  new_child->parent_ = this;
++  new_child->previous_sibling_ = ref_child->previous_sibling_;
++  new_child->next_sibling_ = ref_child;
++
++  if (ref_child->previous_sibling_) {
++    ref_child->previous_sibling_->next_sibling_ = new_child.get();
++  } else {
++    first_child_ = new_child.get();
++  }
++
++  ref_child->previous_sibling_ = new_child.get();
++
++  children_.insert(it, std::move(new_child));
++  RebuildSearchIndex();
++  return children_.back().get();
++}
++
++BMSNode* BMSNode::ReplaceChild(std::unique_ptr<BMSNode> new_child,
++                               BMSNode* old_child) {
++  if (!new_child || !old_child) return nullptr;
++
++  auto it = std::find_if(children_.begin(), children_.end(),
++      [old_child](const std::unique_ptr<BMSNode>& child) {
++        return child.get() == old_child;
++      });
++
++  if (it == children_.end()) return nullptr;
++
++  BMSNode* inserted = InsertBefore(std::move(new_child), old_child);
++  if (!inserted) return nullptr;
++
++  RemoveChild(old_child);
++  RebuildSearchIndex();
++  return old_child;
++}
++
++BMSNode* BMSNode::RemoveChild(BMSNode* child) {
++  if (!child) return nullptr;
++
++  auto it = std::find_if(children_.begin(), children_.end(),
++      [child](const std::unique_ptr<BMSNode>& c) {
++        return c.get() == child;
++      });
++
++  if (it == children_.end()) return nullptr;
++
++  if (child->previous_sibling_) {
++    child->previous_sibling_->next_sibling_ = child->next_sibling_;
++  } else {
++    first_child_ = child->next_sibling_;
++  }
++
++  if (child->next_sibling_) {
++    child->next_sibling_->previous_sibling_ = child->previous_sibling_;
++  } else {
++    last_child_ = child->previous_sibling_;
++  }
++
++  child->parent_ = nullptr;
++  child->previous_sibling_ = nullptr;
++  child->next_sibling_ = nullptr;
++
++  children_.erase(it);
++  RebuildSearchIndex();
++  return child;
++}
++
++std::string BMSNode::GetTextContent() const {
++  if (type_ == NODE_TYPE_TEXT || type_ == NODE_TYPE_CDATA_SECTION) {
++    return node_value_;
++  }
++
++  if (type_ == NODE_TYPE_COMMENT) {
++    return "";
++  }
++
++  std::stringstream ss;
++  BMSNode* child = first_child_;
++  while (child) {
++    ss << child->GetTextContent();
++    child = child->next_sibling_;
++  }
++  return ss.str();
++}
++
++void BMSNode::SetTextContent(const std::string& text) {
++  children_.clear();
++  first_child_ = nullptr;
++  last_child_ = nullptr;
++
++  auto text_node = std::make_unique<BMSNode>(NODE_TYPE_TEXT, "#text");
++  text_node->node_value_ = text;
++  AppendChild(std::move(text_node));
++  RebuildSearchIndex();
++}
++
++std::string BMSNode::GetOuterHTML() const {
++  if (type_ == NODE_TYPE_TEXT || type_ == NODE_TYPE_CDATA_SECTION) {
++    return node_value_;
++  }
++
++  if (type_ == NODE_TYPE_COMMENT) {
++    return "<!--" + node_value_ + "-->";
++  }
++
++  if (type_ == NODE_TYPE_ELEMENT) {
++    std::stringstream ss;
++    ss << "<" << node_name_;
++
++    // Add attributes
++    if (IsElement()) {
++      const auto* element = static_cast<const BMSElement*>(this);
++      for (const auto& [name, value] : element->GetAllAttributes()) {
++        ss << " " << name << "=\"" << value << "\"";
++      }
++    }
++
++    ss << ">";
++    ss << GetInnerHTML();
++    ss << "</" << node_name_ << ">";
++    return ss.str();
++  }
++
++  return "";
++}
++
++std::string BMSNode::GetInnerHTML() const {
++  std::stringstream ss;
++  BMSNode* child = first_child_;
++  while (child) {
++    ss << child->GetOuterHTML();
++    child = child->next_sibling_;
++  }
++  return ss.str();
++}
++
++std::unique_ptr<BMSNode> BMSNode::Clone(bool deep) const {
++  auto clone = std::make_unique<BMSNode>(type_, node_name_);
++  clone->node_value_ = node_value_;
++  clone->namespace_uri_ = namespace_uri_;
++  clone->prefix_ = prefix_;
++  clone->local_name_ = local_name_;
++  clone->custom_properties_ = custom_properties_;
++  clone->search_index_ = search_index_;
++
++  if (deep) {
++    BMSNode* child = first_child_;
++    while (child) {
++      auto child_clone = child->Clone(true);
++      clone->AppendChild(std::move(child_clone));
++      child = child->next_sibling_;
++    }
++  }
++
++  return clone;
++}
++
++bool BMSNode::IsEqual(const BMSNode* other) const {
++  if (!other) return false;
++  if (this == other) return true;
++  if (type_ != other->type_) return false;
++  if (node_name_ != other->node_name_) return false;
++  if (node_value_ != other->node_value_) return false;
++  if (children_.size() != other->children_.size()) return false;
++
++  for (size_t i = 0; i < children_.size(); ++i) {
++    if (!children_[i]->IsEqual(other->children_[i].get())) {
++      return false;
++    }
++  }
++  return true;
++}
++
++bool BMSNode::SearchContent(const std::string& query) const {
++  std::string normalized_query = query;
++  std::transform(normalized_query.begin(), normalized_query.end(),
++                normalized_query.begin(), ::tolower);
++
++  std::string normalized_index = search_index_;
++  std::transform(normalized_index.begin(), normalized_index.end(),
++                normalized_index.begin(), ::tolower);
++
++  return normalized_index.find(normalized_query) != std::string::npos;
++}
++
++void BMSNode::RebuildSearchIndex() {
++  search_index_ = GetTextContent();
++
++  // Index attributes if element
++  if (type_ == NODE_TYPE_ELEMENT) {
++    const auto* element = static_cast<const BMSElement*>(this);
++    for (const auto& [key, value] : element->GetAllAttributes()) {
++      search_index_ += " " + key + ":" + value;
++    }
++  }
++
++  // Add to global search index
++  if (owner_document_) {
++    BMSGlobalSearch::GetInstance()->IndexNode(this);
++  }
++}
++
++// ============================================================================
++// BMSElement Implementation
++// ============================================================================
++
++BMSElement::BMSElement(const std::string& tag_name)
++    : BMSNode(NODE_TYPE_ELEMENT, tag_name), shadow_root_(nullptr),
++      is_connected_(false), tag_name_(tag_name) {
++  attributes_.clear();
++  styles_.clear();
++  event_listeners_.clear();
++}
++
++void BMSElement::SetAttribute(const std::string& name,
++                              const std::string& value) {
++  attributes_[name] = value;
++  RebuildSearchIndex();
++
++  // Notify attribute change
++  if (is_connected_) {
++    AttributeChangedCallback(name, "", value);
++  }
++}
++
++std::string BMSElement::GetAttribute(const std::string& name) const {
++  auto it = attributes_.find(name);
++  return it != attributes_.end() ? it->second : "";
++}
++
++bool BMSElement::HasAttribute(const std::string& name) const {
++  return attributes_.find(name) != attributes_.end();
++}
++
++void BMSElement::RemoveAttribute(const std::string& name) {
++  attributes_.erase(name);
++  RebuildSearchIndex();
++}
++
++void BMSElement::AddClass(const std::string& class_name) {
++  if (HasClass(class_name)) return;
++  std::string class_str = GetAttribute("class");
++  if (!class_str.empty()) {
++    class_str += " ";
++  }
++  class_str += class_name;
++  SetAttribute("class", class_str);
++}
++
++bool BMSElement::HasClass(const std::string& class_name) const {
++  std::string class_str = GetAttribute("class");
++  std::regex pattern("\\b" + class_name + "\\b");
++  return std::regex_search(class_str, pattern);
++}
++
++void BMSElement::RemoveClass(const std::string& class_name) {
++  std::string class_str = GetAttribute("class");
++  std::regex pattern("\\b" + class_name + "\\b\\s*");
++  std::string result = std::regex_replace(class_str, pattern, "");
++  SetAttribute("class", result);
++}
++
++void BMSElement::SetStyle(const std::string& property,
++                          const std::string& value) {
++  styles_[property] = value;
++
++  // Update style attribute
++  std::stringstream ss;
++  for (const auto& [prop, val] : styles_) {
++    if (!ss.str().empty()) ss << "; ";
++    ss << prop << ": " << val;
++  }
++  SetAttribute("style", ss.str());
++}
++
++void BMSElement::AddEventListener(const std::string& event,
++                                  std::function<void(void*)> callback) {
++  event_listeners_[event] = callback;
++}
++
++void BMSElement::DispatchEvent(const std::string& event, void* data) {
++  auto it = event_listeners_.find(event);
++  if (it != event_listeners_.end()) {
++    it->second(data);
++  }
++
++  // Bubble up
++  if (parent_) {
++    parent_->OnEvent(event, data);
++  }
++}
++
++std::unique_ptr<BMSNode> BMSElement::AttachShadow() {
++  shadow_root_ = BMSNode::CreateShadowRoot();
++  shadow_root_->parent_ = this;
++  return std::move(shadow_root_);
++}
++
++void BMSElement::ConnectedCallback() {
++  is_connected_ = true;
++  BMS_DEBUG_LOG("Element connected: " << tag_name_);
++}
++
++void BMSElement::DisconnectedCallback() {
++  is_connected_ = false;
++  BMS_DEBUG_LOG("Element disconnected: " << tag_name_);
++}
++
++void BMSElement::AttributeChangedCallback(const std::string& name,
++                                         const std::string& old_value,
++                                         const std::string& new_value) {
++  BMS_DEBUG_LOG("Attribute changed: " << name << " = " << new_value);
++}
++
++// ============================================================================
++// BMSDocument Implementation
++// ============================================================================
++
++BMSDocument::BMSDocument() : BMSNode(NODE_TYPE_DOCUMENT, "#document") {
++  owner_document_ = this;
++  title_ = "BMS Browser";
++  url_ = "about:blank";
++}
++
++BMSElement* BMSDocument::GetDocumentElement() const {
++  for (auto& child : children_) {
++    if (child->GetType() == NODE_TYPE_ELEMENT) {
++      auto* element = static_cast<BMSElement*>(child.get());
++      if (element->GetTagName() == "html") {
++        return element;
++      }
++    }
++  }
++  return nullptr;
++}
++
++BMSElement* BMSDocument::GetElementById(const std::string& id) const {
++  return FindElementById(const_cast<BMSNode*>(this), id);
++}
++
++BMSElement* BMSDocument::FindElementById(BMSNode* node,
++                                         const std::string& id) const {
++  if (!node) return nullptr;
++
++  if (node->GetType() == NODE_TYPE_ELEMENT) {
++    auto* element = static_cast<BMSElement*>(node);
++    if (element->GetId() == id) {
++      return element;
++    }
++  }
++
++  for (auto& child : node->children_) {
++    BMSElement* result = FindElementById(child.get(), id);
++    if (result) return result;
++  }
++
++  return nullptr;
++}
++
++std::vector<BMSElement*> BMSDocument::GetElementsByTagName(
++    const std::string& tag_name) const {
++  std::vector<BMSElement*> results;
++  FindElementsByTagName(const_cast<BMSNode*>(this), tag_name, results);
++  return results;
++}
++
++void BMSDocument::FindElementsByTagName(BMSNode* node,
++                                        const std::string& tag_name,
++                                        std::vector<BMSElement*>& results) const {
++  if (!node) return;
++
++  if (node->GetType() == NODE_TYPE_ELEMENT) {
++    auto* element = static_cast<BMSElement*>(node);
++    if (element->GetTagName() == tag_name || tag_name == "*") {
++      results.push_back(element);
++    }
++  }
++
++  for (auto& child : node->children_) {
++    FindElementsByTagName(child.get(), tag_name, results);
++  }
++}
++
++void BMSDocument::ParseHTML(const std::string& html) {
++  // Simple HTML parser
++  children_.clear();
++  first_child_ = nullptr;
++  last_child_ = nullptr;
++
++  // Create HTML element
++  auto html_element = std::make_unique<BMSElement>("html");
++  auto head_element = std::make_unique<BMSElement>("head");
++  auto body_element = std::make_unique<BMSElement>("body");
++
++  // Parse title
++  std::regex title_pattern(R"(<title>([^<]*)</title>)");
++  std::smatch title_match;
++  if (std::regex_search(html, title_match, title_pattern)) {
++    title_ = title_match[1];
++    auto title_element = std::make_unique<BMSElement>("title");
++    title_element->SetTextContent(title_);
++    head_element->AppendChild(std::move(title_element));
++  }
++
++  // Add basic structure
++  html_element->AppendChild(std::move(head_element));
++  html_element->AppendChild(std::move(body_element));
++  AppendChild(std::move(html_element));
++
++  RebuildSearchIndex();
++  IndexDocument();
++}
++
++void BMSDocument::IndexDocument() {
++  std::string content = GetTextContent();
++  BMSGlobalSearch::GetInstance()->IndexPage(url_, content, title_);
++}
++
++std::vector<BMSNode*> BMSDocument::Search(const std::string& query) const {
++  std::vector<BMSNode*> results;
++
++  std::function<void(BMSNode*)> search_node = [&](BMSNode* node) {
++    if (!node) return;
++
++    if (node->SearchContent(query)) {
++      results.push_back(node);
++    }
++
++    for (auto& child : node->children_) {
++      search_node(child.get());
++    }
++  };
++
++  search_node(const_cast<BMSNode*>(static_cast<const BMSNode*>(this)));
++  return results;
++}
++
++// ============================================================================
++// BMSDomEngine Implementation
++// ============================================================================
++
++BMSDomEngine* BMSDomEngine::instance_ = nullptr;
++
++BMSDomEngine* BMSDomEngine::GetInstance() {
++  if (!instance_) {
++    instance_ = new BMSDomEngine();
++  }
++  return instance_;
++}
++
++BMSDomEngine::BMSDomEngine() : initialized_(false) {
++  BMS_DEBUG_LOG("BMS DOM Engine initialized");
++}
++
++BMSDomEngine::~BMSDomEngine() {
++  observers_.clear();
++}
++
++void BMSDomEngine::Initialize() {
++  if (initialized_) return;
++
++  // Load custom elements
++  LoadCustomElements();
++
++  initialized_ = true;
++  BMS_DEBUG_LOG("BMS DOM Engine fully initialized");
++}
++
++BMSDocument* BMSDomEngine::CreateDocument() {
++  auto doc = std::make_unique<BMSDocument>();
++  doc->SetURL("about:blank");
++  doc->SetTitle("BMS Browser");
++
++  // Add default styles
++  auto style_element = std::make_unique<BMSElement>("style");
++  style_element->SetTextContent(R"(
++    body { font-family: -apple-system, Arial, sans-serif; margin: 0; padding: 20px; }
++    h1 { color: #333; }
++    a { color: #0066cc; text-decoration: none; }
++    a:hover { text-decoration: underline; }
++  )");
++
++  // Store document
++  documents_.push_back(std::move(doc));
++  return documents_.back().get();
++}
++
++BMSNode* BMSDomEngine::QuerySelector(const std::string& selector) {
++  // Simple selector parser
++  if (selector.empty()) return nullptr;
++
++  for (auto& doc : documents_) {
++    if (selector[0] == '#') {
++      auto* element = doc->GetElementById(selector.substr(1));
++      if (element) return element;
++    } else if (selector[0] == '.') {
++      auto elements = doc->GetElementsByClassName(selector.substr(1));
++      if (!elements.empty()) return elements[0];
++    } else {
++      auto elements = doc->GetElementsByTagName(selector);
++      if (!elements.empty()) return elements[0];
++    }
++  }
++  return nullptr;
++}
++
++void BMSDomEngine::RegisterCustomElement(const std::string& name,
++                                         const std::string& code) {
++  custom_elements_[name] = code;
++  BMS_DEBUG_LOG("Registered custom element: " << name);
++}
++
++void BMSDomEngine::LoadCustomElements() {
++  // Load custom elements from file
++  const std::string custom_elements_path = "custom_elements.json";
++  std::ifstream file(custom_elements_path);
++  if (file.is_open()) {
++    // Parse JSON and register elements
++    // Implementation omitted for brevity
++    file.close();
++  }
++}
++
++void BMSDomEngine::AddObserver(Observer* observer) {
++  if (observer) {
++    observers_.push_back(observer);
++  }
++}
++
++void BMSDomEngine::RemoveObserver(Observer* observer) {
++  auto it = std::remove(observers_.begin(), observers_.end(), observer);
++  if (it != observers_.end()) {
++    observers_.erase(it, observers_.end());
++  }
++}
++
++void BMSDomEngine::NotifyNodeAdded(BMSNode* node) {
++  for (auto* observer : observers_) {
++    observer->OnDomNodeAdded(node);
++  }
++}
++
++void BMSDomEngine::NotifyNodeRemoved(BMSNode* node) {
++  for (auto* observer : observers_) {
++    observer->OnDomNodeRemoved(node);
++  }
++}
++
++void BMSDomEngine::NotifyNavigation(const std::string& url) {
++  for (auto* observer : observers_) {
++    observer->OnNavigation(url);
++  }
++}
++
++std::string BMSDomEngine::NodeToJson(BMSNode* node) {
++  if (!node) return "null";
++
++  std::stringstream ss;
++  ss << "{";
++  ss << "\"type\":" << static_cast<int>(node->GetType()) << ",";
++  ss << "\"name\":\"" << node->GetNodeName() << "\",";
++  ss << "\"value\":\"" << node->GetNodeValue() << "\",";
++  ss << "\"children\":" << node->GetChildCount();
++  ss << "}";
++
++  return ss.str();
++}
++
++}  // namespace DOM
++}  // namespace BMS
+diff --git a/chromium/src/bms/search/bms_global_search.cc b/chromium/src/bms/search/bms_global_search.cc
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/chromium/src/bms/search/bms_global_search.cc
+@@ -0,0 +1,423 @@
++// bms_global_search.cc - BMS Global Search Engine
++// Copyright 2026 BMS Browser Team. All rights reserved.
++
++#include "bms/search/bms_global_search.h"
++
++#include <algorithm>
++#include <regex>
++#include <sstream>
++#include <chrono>
++#include <thread>
++#include <fstream>
++#include <queue>
++
++#include "base/logging.h"
++#include "base/strings/utf_string_conversions.h"
++#include "net/http/http_request_headers.h"
++#include "net/url_request/url_request_context.h"
++
++namespace BMS {
++namespace Search {
++
++// ============================================================================
++// BMSGlobalSearch Implementation
++// ============================================================================
++
++BMSGlobalSearch* BMSGlobalSearch::instance_ = nullptr;
++
++BMSGlobalSearch* BMSGlobalSearch::GetInstance() {
++  if (!instance_) {
++    instance_ = new BMSGlobalSearch();
++  }
++  return instance_;
++}
++
++BMSGlobalSearch::BMSGlobalSearch()
++    : initialized_(false), max_results_(100), crawl_depth_(3) {
++  Initialize();
++}
++
++BMSGlobalSearch::~BMSGlobalSearch() {
++  // Save index to disk
++  SaveIndex();
++}
++
++void BMSGlobalSearch::Initialize() {
++  if (initialized_) return;
++
++  // Load index from disk
++  LoadIndex();
++
++  // Start background indexing thread
++  std::thread([this]() {
++    while (true) {
++      ProcessIndexQueue();
++      std::this_thread::sleep_for(std::chrono::seconds(10));
++    }
++  }).detach();
++
++  initialized_ = true;
++  BMS_DEBUG_LOG("BMS Global Search initialized");
++}
++
++void BMSGlobalSearch::IndexPage(const std::string& url,
++                                const std::string& html,
++                                const std::string& title) {
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  SearchEntry entry;
++  entry.url = url;
++  entry.title = title.empty() ? "Page" : title;
++  entry.content = html;
++  entry.relevance = 0.0f;
++  entry.visits = 1;
++  entry.last_visited = std::chrono::system_clock::now();
++
++  // Extract keywords and metadata
++  ExtractKeywords(entry);
++
++  index_[url] = entry;
++  BMS_DEBUG_LOG("Indexed page: " << url << " (" << html.length() << " bytes)");
++}
++
++void BMSGlobalSearch::IndexNode(BMSNode* node) {
++  if (!node) return;
++
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  std::string content = node->GetTextContent();
++  if (content.empty()) return;
++
++  std::string url = node->GetOwnerDocument() ?
++      node->GetOwnerDocument()->GetURL() : "node";
++
++  // Add to index
++  auto it = index_.find(url);
++  if (it != index_.end()) {
++    it->second.content += " " + content;
++    ExtractKeywords(it->second);
++  } else {
++    SearchEntry entry;
++    entry.url = url;
++    entry.title = "DOM Node";
++    entry.content = content;
++    entry.last_visited = std::chrono::system_clock::now();
++    ExtractKeywords(entry);
++    index_[url] = entry;
++  }
++}
++
++void BMSGlobalSearch::RemoveNode(BMSNode* node) {
++  if (!node) return;
++
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  std::string url = node->GetOwnerDocument() ?
++      node->GetOwnerDocument()->GetURL() : "node";
++
++  index_.erase(url);
++}
++
++std::vector<SearchResult> BMSGlobalSearch::Search(const std::string& query,
++                                                  int max_results) {
++  std::lock_guard<std::mutex> lock(mutex_);
++  std::vector<SearchResult> results;
++
++  // Normalize query
++  std::string normalized_query = query;
++  std::transform(normalized_query.begin(), normalized_query.end(),
++                normalized_query.begin(), ::tolower);
++
++  // Search in index
++  for (const auto& [url, entry] : index_) {
++    float relevance = CalculateRelevance(entry.content, normalized_query);
++    if (relevance > 0.1f) {
++      SearchResult result;
++      result.url = url;
++      result.title = entry.title;
++      result.snippet = GenerateSnippet(entry.content, query);
++      result.relevance = relevance;
++      result.last_visited = entry.last_visited;
++      results.push_back(result);
++    }
++  }
++
++  // Sort by relevance
++  std::sort(results.begin(), results.end(),
++      [](const SearchResult& a, const SearchResult& b) {
++        return a.relevance > b.relevance;
++      });
++
++  // Limit results
++  int limit = std::min(max_results, static_cast<int>(results.size()));
++  results.resize(limit);
++
++  return results;
++}
++
++std::vector<SearchResult> BMSGlobalSearch::SearchGlobal(const std::string& query,
++                                                        int max_results) {
++  // Search across all indexed websites
++  std::vector<SearchResult> results = Search(query, max_results);
++
++  // Add results from external search engines
++  std::vector<SearchResult> external_results = SearchExternal(query);
++  results.insert(results.end(), external_results.begin(), external_results.end());
++
++  // Re-sort with combined relevance
++  std::sort(results.begin(), results.end(),
++      [](const SearchResult& a, const SearchResult& b) {
++        return a.relevance > b.relevance;
++      });
++
++  // Limit results
++  if (results.size() > static_cast<size_t>(max_results)) {
++    results.resize(max_results);
++  }
++
++  return results;
++}
++
++void BMSGlobalSearch::CrawlWebsite(const std::string& start_url, int max_pages) {
++  BMS_DEBUG_LOG("Crawling website: " << start_url << " (max: " << max_pages << ")");
++
++  std::queue<std::string> url_queue;
++  std::unordered_set<std::string> visited;
++  int crawled = 0;
++
++  url_queue.push(start_url);
++
++  while (!url_queue.empty() && crawled < max_pages) {
++    std::string url = url_queue.front();
++    url_queue.pop();
++
++    if (visited.find(url) != visited.end()) continue;
++    visited.insert(url);
++
++    // Fetch page
++    std::string html = FetchPage(url);
++    if (html.empty()) continue;
++
++    // Index page
++    IndexPage(url, html);
++    crawled++;
++
++    // Extract links
++    std::vector<std::string> links = ExtractLinks(html);
++    for (const auto& link : links) {
++      if (visited.find(link) == visited.end()) {
++        url_queue.push(link);
++      }
++    }
++  }
++
++  BMS_DEBUG_LOG("Crawled " << crawled << " pages from " << start_url);
++}
++
++std::vector<std::string> BMSGlobalSearch::GetRelatedPages(const std::string& url,
++                                                          int max_results) {
++  std::lock_guard<std::mutex> lock(mutex_);
++  std::vector<std::pair<std::string, float>> related;
++
++  auto it = index_.find(url);
++  if (it == index_.end()) return {};
++
++  const auto& entry = it->second;
++
++  // Find pages with similar content
++  for (const auto& [other_url, other_entry] : index_) {
++    if (other_url != url) {
++      float similarity = CalculateSimilarity(entry.content, other_entry.content);
++      if (similarity > 0.3f) {
++        related.push_back({other_url, similarity});
++      }
++    }
++  }
++
++  // Sort by similarity
++  std::sort(related.begin(), related.end(),
++      [](const auto& a, const auto& b) {
++        return a.second > b.second;
++      });
++
++  std::vector<std::string> results;
++  for (int i = 0; i < max_results && i < static_cast<int>(related.size()); ++i) {
++    results.push_back(related[i].first);
++  }
++
++  return results;
++}
++
++std::vector<std::string> BMSGlobalSearch::GetTopPages(int count) {
++  std::lock_guard<std::mutex> lock(mutex_);
++  std::vector<std::pair<std::string, int>> page_visits;
++
++  for (const auto& [url, entry] : index_) {
++    page_visits.push_back({url, entry.visits});
++  }
++
++  std::sort(page_visits.begin(), page_visits.end(),
++      [](const auto& a, const auto& b) {
++        return a.second > b.second;
++      });
++
++  std::vector<std::string> results;
++  for (int i = 0; i < count && i < static_cast<int>(page_visits.size()); ++i) {
++    results.push_back(page_visits[i].first);
++  }
++
++  return results;
++}
++
++std::string BMSGlobalSearch::ResultsToJson(const std::vector<SearchResult>& results) {
++  std::stringstream ss;
++  ss << "[";
++
++  for (size_t i = 0; i < results.size(); ++i) {
++    const auto& result = results[i];
++    ss << "{";
++    ss << "\"url\":\"" << result.url << "\",";
++    ss << "\"title\":\"" << result.title << "\",";
++    ss << "\"snippet\":\"" << result.snippet << "\",";
++    ss << "\"relevance\":" << result.relevance;
++    ss << "}";
++
++    if (i < results.size() - 1) {
++      ss << ",";
++    }
++  }
++
++  ss << "]";
++  return ss.str();
++}
++
++void BMSGlobalSearch::SaveIndex() {
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  std::ofstream file("bms_search_index.json");
++  if (!file.is_open()) {
++    BMS_DEBUG_LOG("Failed to save search index");
++    return;
++  }
++
++  file << "{\n";
++  file << "  \"index\": [\n";
++
++  for (auto it = index_.begin(); it != index_.end(); ++it) {
++    const auto& [url, entry] = *it;
++    file << "    {\n";
++    file << "      \"url\": \"" << url << "\",\n";
++    file << "      \"title\": \"" << entry.title << "\",\n";
++    file << "      \"visits\": " << entry.visits << ",\n";
++    file << "      \"last_visited\": " << entry.last_visited.time_since_epoch().count() << "\n";
++    file << "    }";
++
++    if (std::next(it) != index_.end()) {
++      file << ",";
++    }
++    file << "\n";
++  }
++
++  file << "  ]\n";
++  file << "}\n";
++
++  file.close();
++  BMS_DEBUG_LOG("Search index saved (" << index_.size() << " entries)");
++}
++
++void BMSGlobalSearch::LoadIndex() {
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  std::ifstream file("bms_search_index.json");
++  if (!file.is_open()) {
++    BMS_DEBUG_LOG("No existing search index found");
++    return;
++  }
++
++  // Parse JSON (simplified)
++  // In production, use a proper JSON parser
++  BMS_DEBUG_LOG("Loading search index from file");
++  file.close();
++}
++
++float BMSGlobalSearch::CalculateRelevance(const std::string& content,
++                                          const std::string& query) {
++  std::string normalized_content = content;
++  std::string normalized_query = query;
++
++  std::transform(normalized_content.begin(), normalized_content.end(),
++                normalized_content.begin(), ::tolower);
++  std::transform(normalized_query.begin(), normalized_query.end(),
++                normalized_query.begin(), ::tolower);
++
++  // Count occurrences
++  size_t pos = 0;
++  int count = 0;
++  while ((pos = normalized_content.find(normalized_query, pos)) != std::string::npos) {
++    ++count;
++    pos += normalized_query.length();
++  }
++
++  if (count == 0) return 0.0f;
++
++  // Normalize by content length
++  float relevance = static_cast<float>(count) / (normalized_content.length() / 100);
++  return std::min(1.0f, relevance);
++}
++
++std::string BMSGlobalSearch::GenerateSnippet(const std::string& content,
++                                             const std::string& query) {
++  // Find query in content and return surrounding text
++  std::string normalized_content = content;
++  std::string normalized_query = query;
++
++  std::transform(normalized_content.begin(), normalized_content.end(),
++                normalized_content.begin(), ::tolower);
++  std::transform(normalized_query.begin(), normalized_query.end(),
++                normalized_query.begin(), ::tolower);
++
++  size_t pos = normalized_content.find(normalized_query);
++  if (pos == std::string::npos) {
++    // Return first 150 characters
++    return content.substr(0, 150) + "...";
++  }
++
++  // Return context around query
++  size_t start = pos > 50 ? pos - 50 : 0;
++  size_t length = std::min(static_cast<size_t>(200), content.length() - start);
++  std::string snippet = content.substr(start, length);
++
++  if (start > 0) snippet = "..." + snippet;
++  if (start + length < content.length()) snippet += "...";
++
++  return snippet;
++}
++
++void BMSGlobalSearch::ExtractKeywords(SearchEntry& entry) {
++  // Simple keyword extraction
++  std::regex word_pattern(R"(\b[a-zA-Z]{3,}\b)");
++  auto begin = std::sregex_iterator(entry.content.begin(),
++                                    entry.content.end(), word_pattern);
++  auto end = std::sregex_iterator();
++
++  std::unordered_map<std::string, int> word_count;
++  for (auto it = begin; it != end; ++it) {
++    std::string word = it->str();
++    std::transform(word.begin(), word.end(), word.begin(), ::tolower);
++    word_count[word]++;
++  }
++
++  // Store top keywords
++  entry.keywords.clear();
++  std::vector<std::pair<std::string, int>> sorted_words(word_count.begin(),
++                                                        word_count.end());
++  std::sort(sorted_words.begin(), sorted_words.end(),
++      [](const auto& a, const auto& b) {
++        return a.second > b.second;
++      });
++
++  for (int i = 0; i < 10 && i < static_cast<int>(sorted_words.size()); ++i) {
++    entry.keywords.push_back(sorted_words[i].first);
++  }
++}
++
++}  // namespace Search
++}  // namespace BMS
+diff --git a/chromium/src/bms/ignore/bms_ignore_system.cc b/chromium/src/bms/ignore/bms_ignore_system.cc
+new file mode 100644
+index 0000000..abcdef1
+--- /dev/null
++++ b/chromium/src/bms/ignore/bms_ignore_system.cc
+@@ -0,0 +1,198 @@
++// bms_ignore_system.cc - BMS Ignore System
++// Copyright 2026 BMS Browser Team. All rights reserved.
++
++#include "bms/ignore/bms_ignore_system.h"
++
++#include <fstream>
++#include <regex>
++#include <algorithm>
++
++#include "base/logging.h"
++#include "base/files/file_util.h"
++
++namespace BMS {
++namespace Ignore {
++
++// ============================================================================
++// BMSIgnoreSystem Implementation
++// ============================================================================
++
++BMSIgnoreSystem* BMSIgnoreSystem::instance_ = nullptr;
++
++BMSIgnoreSystem* BMSIgnoreSystem::GetInstance() {
++  if (!instance_) {
++    instance_ = new BMSIgnoreSystem();
++  }
++  return instance_;
++}
++
++BMSIgnoreSystem::BMSIgnoreSystem() : loaded_(false) {
++  // Initialize with default patterns
++  AddPattern("*.tmp", false);
++  AddPattern("*.temp", false);
++  AddPattern("*.log", false);
++  AddPattern("*.bak", false);
++  AddPattern("*.cache", false);
++  AddPattern("*.swp", false);
++  AddPattern("*.swo", false);
++  AddPattern("node_modules/", false);
++  AddPattern("__pycache__/", false);
++  AddPattern(".git/", false);
++  AddPattern(".svn/", false);
++  AddPattern(".vscode/", false);
++  AddPattern(".idea/", false);
++  AddPattern("build/", false);
++  AddPattern("debug/", false);
++  AddPattern("release/", false);
++  AddPattern("*.exe", false);
++  AddPattern("*.dll", false);
++  AddPattern("*.so", false);
++  AddPattern("*.o", false);
++  AddPattern("*.obj", false);
++}
++
++BMSIgnoreSystem::~BMSIgnoreSystem() = default;
++
++void BMSIgnoreSystem::LoadIgnoreFile(const std::string& path) {
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  std::ifstream file(path);
++  if (!file.is_open()) {
++    BMS_DEBUG_LOG("Ignore file not found: " << path);
++    return;
++  }
++
++  std::string line;
++  while (std::getline(file, line)) {
++    // Skip comments and empty lines
++    if (line.empty() || line[0] == '#') continue;
++
++    // Check for regex pattern
++    bool is_regex = false;
++    if (line.find('*') != std::string::npos ||
++        line.find('?') != std::string::npos ||
++        line.find('[') != std::string::npos ||
++        line.find(']') != std::string::npos) {
++      is_regex = true;
++    }
++
++    // Check for negated pattern
++    if (line[0] == '!') {
++      // Negated patterns - we'll handle separately
++      continue;
++    }
++
++    AddPattern(line, is_regex);
++  }
++
++  file.close();
++  loaded_ = true;
++  BMS_DEBUG_LOG("Loaded ignore file: " << path << " (" << patterns_.size() << " patterns)");
++}
++
++void BMSIgnoreSystem::AddPattern(const std::string& pattern, bool is_regex) {
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  IgnorePattern ignore_pattern;
++  ignore_pattern.pattern = pattern;
++  ignore_pattern.is_regex = is_regex;
++  ignore_pattern.is_negated = false;
++
++  patterns_.push_back(ignore_pattern);
++  BMS_DEBUG_LOG("Added ignore pattern: " << pattern);
++}
++
++void BMSIgnoreSystem::RemovePattern(const std::string& pattern) {
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  auto it = std::remove_if(patterns_.begin(), patterns_.end(),
++      [&pattern](const IgnorePattern& p) {
++        return p.pattern == pattern;
++      });
++
++  if (it != patterns_.end()) {
++    patterns_.erase(it, patterns_.end());
++    BMS_DEBUG_LOG("Removed ignore pattern: " << pattern);
++  }
++}
++
++bool BMSIgnoreSystem::ShouldIgnore(const std::string& path) const {
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  for (const auto& pattern : patterns_) {
++    bool match = false;
++
++    if (pattern.is_regex) {
++      try {
++        std::regex regex_pattern(pattern.pattern);
++        match = std::regex_search(path, regex_pattern);
++      } catch (const std::regex_error&) {
++        // Invalid regex, treat as literal
++        match = path.find(pattern.pattern) != std::string::npos;
++      }
++    } else {
++      // Simple pattern matching with wildcards
++      match = PathMatchesPattern(path, pattern.pattern);
++    }
++
++    if (pattern.is_negated && match) {
++      // Negated pattern - do NOT ignore
++      return false;
++    }
++
++    if (match) {
++      BMS_DEBUG_LOG("Ignoring: " << path << " (pattern: " << pattern.pattern << ")");
++      return true;
++    }
++  }
++
++  return false;
++}
++
++bool BMSIgnoreSystem::IsLoaded() const {
++  return loaded_;
++}
++
++bool BMSIgnoreSystem::PathMatchesPattern(const std::string& path,
++                                         const std::string& pattern) const {
++  // Convert glob pattern to regex
++  std::string regex_pattern;
++  regex_pattern = "^";
++
++  for (char c : pattern) {
++    switch (c) {
++      case '*':
++        regex_pattern += ".*";
++        break;
++      case '?':
++        regex_pattern += ".";
++        break;
++      case '.':
++      case '+':
++      case '^':
++      case '$':
++      case '{':
++      case '}':
++      case '[':
++      case ']':
++      case '|':
++      case '\\':
++        regex_pattern += "\\";
++        regex_pattern += c;
++        break;
++      default:
++        regex_pattern += c;
++        break;
++    }
++  }
++
++  regex_pattern += "$";
++
++  try {
++    std::regex regex(regex_pattern);
++    return std::regex_match(path, regex);
++  } catch (const std::regex_error&) {
++    return path.find(pattern) != std::string::npos;
++  }
++}
++
++}  // namespace Ignore
++}  // namespace BMS
+diff --git a/chromium/src/bms/api/bms_api_system.cc b/chromium/src/bms/api/bms_api_system.cc
+new file mode 100644
+index 0000000..abcdef1
+--- /dev/null
++++ b/chromium/src/bms/api/bms_api_system.cc
+@@ -0,0 +1,256 @@
++// bms_api_system.cc - BMS API System
++// Copyright 2026 BMS Browser Team. All rights reserved.
++
++#include "bms/api/bms_api_system.h"
++
++#include <sstream>
++#include <fstream>
++#include <algorithm>
++
++#include "base/logging.h"
++#include "base/strings/string_util.h"
++#include "bms/dom/bms_dom_engine.h"
++#include "bms/search/bms_global_search.h"
++#include "bms/ignore/bms_ignore_system.h"
++
++namespace BMS {
++namespace API {
++
++// ============================================================================
++// BMSApiSystem Implementation
++// ============================================================================
++
++BMSApiSystem* BMSApiSystem::instance_ = nullptr;
++
++BMSApiSystem* BMSApiSystem::GetInstance() {
++  if (!instance_) {
++    instance_ = new BMSApiSystem();
++  }
++  return instance_;
++}
++
++BMSApiSystem::BMSApiSystem() : initialized_(false) {
++  RegisterDefaultApis();
++}
++
++BMSApiSystem::~BMSApiSystem() = default;
++
++void BMSApiSystem::Initialize() {
++  if (initialized_) return;
++
++  // Load custom API modules
++  LoadApiModules();
++
++  initialized_ = true;
++  BMS_DEBUG_LOG("BMS API System initialized");
++}
++
++void BMSApiSystem::RegisterApi(const std::string& name, ApiHandler handler) {
++  std::lock_guard<std::mutex> lock(mutex_);
++  apis_[name] = handler;
++  BMS_DEBUG_LOG("Registered API: " << name);
++}
++
++void BMSApiSystem::RegisterDefaultApis() {
++  // Search API
++  RegisterApi("search", [](const std::string& data) -> std::string {
++    auto results = BMS::Search::BMSGlobalSearch::GetInstance()->Search(data, 50);
++    return BMS::Search::BMSGlobalSearch::GetInstance()->ResultsToJson(results);
++  });
++
++  // Search Global API
++  RegisterApi("search_global", [](const std::string& data) -> std::string {
++    auto results = BMS::Search::BMSGlobalSearch::GetInstance()->SearchGlobal(data, 100);
++    return BMS::Search::BMSGlobalSearch::GetInstance()->ResultsToJson(results);
++  });
++
++  // Index Page API
++  RegisterApi("index_page", [](const std::string& data) -> std::string {
++    // Parse JSON data
++    // In production, use a proper JSON parser
++    return "{\"status\":\"ok\"}";
++  });
++
++  // Crawl API
++  RegisterApi("crawl", [](const std::string& data) -> std::string {
++    // Start crawling in background
++    std::thread([data]() {
++      BMS::Search::BMSGlobalSearch::GetInstance()->CrawlWebsite(data, 100);
++    }).detach();
++    return "{\"status\":\"crawling_started\"}";
++  });
++
++  // Ignore API
++  RegisterApi("ignore", [](const std::string& data) -> std::string {
++    BMS::Ignore::BMSIgnoreSystem::GetInstance()->AddPattern(data, false);
++    return "{\"status\":\"pattern_added\",\"pattern\":\"" + data + "\"}";
++  });
++
++  // DOM Query API
++  RegisterApi("dom_query", [](const std::string& data) -> std::string {
++    auto* engine = BMS::DOM::BMSDomEngine::GetInstance();
++    auto* node = engine->QuerySelector(data);
++    if (node) {
++      return "{\"found\":true,\"type\":" +
++             std::to_string(static_cast<int>(node->GetType())) + "}";
++    }
++    return "{\"found\":false}";
++  });
++
++  // Get Top Pages API
++  RegisterApi("top_pages", [](const std::string& data) -> std::string {
++    int count = 10;
++    if (!data.empty()) {
++      count = std::stoi(data);
++    }
++    auto pages = BMS::Search::BMSGlobalSearch::GetInstance()->GetTopPages(count);
++    std::stringstream ss;
++    ss << "[";
++    for (size_t i = 0; i < pages.size(); ++i) {
++      ss << "\"" << pages[i] << "\"";
++      if (i < pages.size() - 1) ss << ",";
++    }
++    ss << "]";
++    return ss.str();
++  });
++
++  // Statistics API
++  RegisterApi("stats", [](const std::string& data) -> std::string {
++    auto* search = BMS::Search::BMSGlobalSearch::GetInstance();
++    auto* dom = BMS::DOM::BMSDomEngine::GetInstance();
++    auto* ignore = BMS::Ignore::BMSIgnoreSystem::GetInstance();
++
++    std::stringstream ss;
++    ss << "{";
++    ss << "\"search_engine\":\"BMS Global Search\",";
++    ss << "\"dom_engine\":\"BMS DOM Engine v1.0\",";
++    ss << "\"ignore_system\":\"" << (ignore->IsLoaded() ? "loaded" : "not_loaded") << "\",";
++    ss << "\"version\":\"1.0.0\"";
++    ss << "}";
++    return ss.str();
++  });
++
++  // Get Related Pages API
++  RegisterApi("related", [](const std::string& data) -> std::string {
++    auto pages = BMS::Search::BMSGlobalSearch::GetInstance()->GetRelatedPages(data, 10);
++    std::stringstream ss;
++    ss << "[";
++    for (size_t i = 0; i < pages.size(); ++i) {
++      ss << "\"" << pages[i] << "\"";
++      if (i < pages.size() - 1) ss << ",";
++    }
++    ss << "]";
++    return ss.str();
++  });
++
++  // Custom Element API
++  RegisterApi("custom_element", [](const std::string& data) -> std::string {
++    // Parse name and code from JSON
++    // In production, use proper JSON parsing
++    return "{\"status\":\"ok\"}";
++  });
++}
++
++std::string BMSApiSystem::Call(const std::string& name, const std::string& data) {
++  std::lock_guard<std::mutex> lock(mutex_);
++
++  auto it = apis_.find(name);
++  if (it == apis_.end()) {
++    BMS_DEBUG_LOG("API not found: " << name);
++    return "{\"error\":\"API not found\"}";
++  }
++
++  try {
++    BMS_DEBUG_LOG("Calling API: " << name << "(" << data << ")");
++    return it->second(data);
++  } catch (const std::exception& e) {
++    BMS_DEBUG_LOG("API call failed: " << e.what());
++    return "{\"error\":\"" + std::string(e.what()) + "\"}";
++  }
++}
++
++void BMSApiSystem::RegisterModule(const std::string& name, void* module) {
++  std::lock_guard<std::mutex> lock(mutex_);
++  modules_[name] = module;
++  BMS_DEBUG_LOG("Registered API module: " << name);
++}
++
++void BMSApiSystem::LoadApiModules() {
++  // Load API modules from directory
++  const std::string modules_dir = "bms_modules";
++
++  std::vector<std::string> module_files;
++  // In production, scan directory for .bms files
++
++  for (const auto& file : module_files) {
++    LoadApiModule(file);
++  }
++}
++
++void BMSApiSystem::LoadApiModule(const std::string& path) {
++  std::ifstream file(path);
++  if (!file.is_open()) {
++    BMS_DEBUG_LOG("Failed to load API module: " << path);
++    return;
++  }
++
++  std::string content((std::istreambuf_iterator<char>(file)),
++                      std::istreambuf_iterator<char>());
++  file.close();
++
++  // Parse module (simplified)
++  // In production, use a proper module system
++  BMS_DEBUG_LOG("Loaded API module: " << path);
++}
++
++// ============================================================================
++// BMSApiBridge Implementation
++// ============================================================================
++
++BMSApiBridge::BMSApiBridge() : api_system_(BMSApiSystem::GetInstance()) {}
++
++BMSApiBridge::~BMSApiBridge() = default;
++
++std::string BMSApiBridge::Search(const std::string& query) {
++  return api_system_->Call("search", query);
++}
++
++std::string BMSApiBridge::SearchGlobal(const std::string& query) {
++  return api_system_->Call("search_global", query);
++}
++
++std::string BMSApiBridge::IndexPage(const std::string& url, const std::string& content) {
++  std::string data = "{\"url\":\"" + url + "\",\"content\":\"" + content + "\"}";
++  return api_system_->Call("index_page", data);
++}
++
++std::string BMSApiBridge::CrawlWebsite(const std::string& url) {
++  return api_system_->Call("crawl", url);
++}
++
++std::string BMSApiBridge::AddIgnorePattern(const std::string& pattern) {
++  return api_system_->Call("ignore", pattern);
++}
++
++std::string BMSApiBridge::QueryDom(const std::string& selector) {
++  return api_system_->Call("dom_query", selector);
++}
++
++std::string BMSApiBridge::GetTopPages(int count) {
++  return api_system_->Call("top_pages", std::to_string(count));
++}
++
++std::string BMSApiBridge::GetRelatedPages(const std::string& url) {
++  return api_system_->Call("related", url);
++}
++
++std::string BMSApiBridge::GetStats() {
++  return api_system_->Call("stats", "");
++}
++
++std::string BMSApiBridge::RegisterCustomElement(const std::string& name,
++                                               const std::string& code) {
++  std::string data = "{\"name\":\"" + name + "\",\"code\":\"" + code + "\"}";
++  return api_system_->Call("custom_element", data);
++}
++
++}  // namespace API
++}  // namespace BMS

@@ -1,0 +1,64 @@
+# CMakeLists.txt - BMS Audio Build Configuration
+cmake_minimum_required(VERSION 3.10)
+project(BMSAudio)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
+
+# Audio sources
+set(AUDIO_SOURCES
+    audio.c
+    audioVol.c
+    audio.cc
+)
+
+set(AUDIO_HEADERS
+    audio.h
+)
+
+# Platform-specific audio libraries
+if(WIN32)
+    set(AUDIO_LIBS
+        winmm.lib
+        dsound.lib
+        ole32.lib
+        ws2_32.lib
+    )
+elseif(APPLE)
+    find_library(COREAUDIO CoreAudio)
+    find_library(AUDIOTOOLBOX AudioToolbox)
+    set(AUDIO_LIBS
+        ${COREAUDIO}
+        ${AUDIOTOOLBOX}
+    )
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(ALSA REQUIRED alsa)
+    pkg_check_modules(PULSE REQUIRED libpulse)
+    set(AUDIO_LIBS
+        ${ALSA_LIBRARIES}
+        ${PULSE_LIBRARIES}
+        pthread
+    )
+endif()
+
+# Create audio library
+add_library(bms_audio ${AUDIO_SOURCES} ${AUDIO_HEADERS})
+
+target_include_directories(bms_audio PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(bms_audio
+    ${AUDIO_LIBS}
+)
+
+# Create test executable
+add_executable(audio_test audio_test.c)
+target_link_libraries(audio_test bms_audio)
+
+# Install
+install(TARGETS bms_audio
+    LIBRARY DESTINATION lib
+    PUBLIC_HEADER DESTINATION include/bms
+)

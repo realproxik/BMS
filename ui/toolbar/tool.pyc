@@ -1,0 +1,97 @@
+# tool.pyc - Compiled Python Module (bytecode representation)
+# This file would contain the compiled bytecode of tool.py
+# For display purposes, we show the bytecode-like representation
+
+"""
+BMS Tool Module - Compiled Bytecode
+Version: 1.0
+Python: 3.8+
+"""
+
+# Bytecode instructions (simplified representation)
+# Actual .pyc file would be binary format
+
+__pycache__ = {
+    'version': '3.8',
+    'timestamp': 1678900000,
+    'code': {
+        'constants': [
+            None,
+            'Tool Module',
+            'BMS Browser - Tool Module',
+            'ToolType',
+            'ToolState',
+            'ToolEvent',
+            'Tool',
+            ...
+        ],
+        'names': [
+            '__name__',
+            '__doc__',
+            '__file__',
+            '__builtins__',
+            ...
+        ],
+        'varnames': [
+            'self',
+            'cls',
+            'tool_type',
+            'tool_id',
+            'label',
+            'icon',
+            'items',
+            ...
+        ],
+        'cellvars': [],
+        'freevars': [],
+        'filename': 'tool.py',
+        'firstlineno': 1,
+        'lnotab': b'\x00\x01\x04\x01\x00\x02\x08\x01...',
+        'flags': 64,
+        'stacksize': 16,
+        'argcount': 0,
+        'kwonlyargcount': 0,
+        'nlocals': 0,
+    }
+}
+
+# ToolType Enum (compiled representation)
+ToolType = {
+    'BUTTON': 0,
+    'TOGGLE': 1,
+    'DROPDOWN': 2,
+    'SLIDER': 3,
+    'TEXT_INPUT': 4,
+    'SEARCH_BAR': 5,
+    'ADDRESS_BAR': 6,
+    'MENU': 7,
+    'SEPARATOR': 8,
+    'CUSTOM': 9
+}
+
+# ToolState Enum (compiled representation)
+ToolState = {
+    'NORMAL': 0,
+    'HOVER': 1,
+    'ACTIVE': 2,
+    'DISABLED': 3,
+    'CHECKED': 4,
+    'UNCHECKED': 5
+}
+
+# ToolEvent Enum (compiled representation)
+ToolEvent = {
+    'CLICK': 0,
+    'DOUBLE_CLICK': 1,
+    'RIGHT_CLICK': 2,
+    'HOVER': 3,
+    'LEAVE': 4,
+    'DRAG_START': 5,
+    'DRAG_END': 6,
+    'DROP': 7,
+    'KEY_DOWN': 8,
+    'KEY_UP': 9,
+    'TEXT_CHANGED': 10,
+    'VALUE_CHANGED': 11,
+    'STATE_CHANGED': 12
+}

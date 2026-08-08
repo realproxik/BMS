@@ -1,0 +1,58 @@
+# CMakeLists.txt - BMS Browser Build Configuration
+cmake_minimum_required(VERSION 3.10)
+project(BMSBrowser)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Find Chromium/CEF
+set(CEF_ROOT "${CMAKE_SOURCE_DIR}/dependencies/chromium")
+find_package(CEF REQUIRED)
+
+# BMS Browser source files
+set(BMS_SOURCES
+    bms_dom_engine.cpp
+    bms_browser_main.cpp
+)
+
+set(BMS_HEADERS
+    bms_dom_engine.h
+)
+
+# Create executable
+add_executable(bms_browser ${BMS_SOURCES} ${BMS_HEADERS})
+
+# Include directories
+target_include_directories(bms_browser PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CEF_ROOT}
+    ${CEF_ROOT}/include
+)
+
+# Link libraries
+target_link_libraries(bms_browser
+    ${CEF_LIBRARIES}
+    ${CEF_STANDARD_LIBRARIES}
+)
+
+# Platform-specific settings
+if(WIN32)
+    target_compile_definitions(bms_browser PRIVATE _WIN32_WINNT=0x0602)
+    target_link_libraries(bms_browser ws2_32.lib user32.lib)
+endif()
+
+# Copy CEF resources
+if(CEF_BINARY_DIR)
+    add_custom_command(TARGET bms_browser POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CEF_BINARY_DIR}/Resources"
+        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Resources"
+    )
+endif()
+
+# Copy .bmsignore
+add_custom_command(TARGET bms_browser POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    "${CMAKE_SOURCE_DIR}/.bmsignore"
+    "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/.bmsignore"
+)
